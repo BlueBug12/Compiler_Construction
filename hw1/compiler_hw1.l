@@ -17,8 +17,8 @@ digit [0-9]
 id {letter}+({letter}|{digit})*
 inumber {digit}+
 fnumber ({digit}*\.{digit}+)
-comment /*need to be defined*/
-string  /*need to be defined*/
+comment \/\*(.\n)*\*\/
+string  "[\x00-\x7F]*"
 
 /* Rules section */
 %%
