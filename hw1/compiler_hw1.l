@@ -9,6 +9,15 @@
 
     int line_num = 0;
     int comment_num = 0;
+    char* sub_string(char* str){
+
+	{ printf("%-8s \t %s\n", "\"", "QUOTA"); }
+	char* sub = calloc(strlen(str)-2,sizeof(char));
+	strncpy(sub,str+1,strlen(str)-2);
+	{ printf("%-8s \t %s\n", sub, "STRING"); }
+	{ printf("%-8s \t %s\n", "\"", "QUOTA"); }
+	return sub;
+    }
 %}
 
 /* Define regular expression label */
@@ -18,18 +27,29 @@ id {letter}+({letter}|{digit})*
 inumber {digit}+
 fnumber ({digit}*\.{digit}+)
 comment \/\*(.\n)*\*\/
-string  "[\x00-\x7F]*"
-
+/*string  "[\x00-\x7F]*"*/
+string \"([^']|\'\')*\"
 /* Rules section */
 %%
-
+"print"     { printf("%-8s \t %s\n", yytext, "PRINT"); }
+"println"   { printf("%-8s \t %s\n", yytext, "PRINTLN"); }
+"if"        { printf("%-8s \t %s\n", yytext, "IF"); }
+"else"      { printf("%-8s \t %s\n", yytext, "ELSE"); }
+"for"       { printf("%-8s \t %s\n", yytext, "FOR"); }
+"int32"     { printf("%-8s \t %s\n", yytext, "INT"); }
+"float32"   { printf("%-8s \t %s\n", yytext, "FLOAT"); }
+"string"    { printf("%-8s \t %s\n", yytext, "STRING"); }
+"bool"      { printf("%-8s \t %s\n", yytext, "BOOL"); }
+"true"      { printf("%-8s \t %s\n", yytext, "TRUE"); }
+"false"     { printf("%-8s \t %s\n", yytext, "FALSE"); }
+"var"       { printf("%-8s \t %s\n", yytext, "VAR"); }
 "+"         { printf("%-8s \t %s\n", yytext, "ADD"); }
 "-"         { printf("%-8s \t %s\n", yytext, "SUB"); }
 "*"         { printf("%-8s \t %s\n", yytext, "MUL"); }
 "/"         { printf("%-8s \t %s\n", yytext, "QUO"); }
 "%"         { printf("%-8s \t %s\n", yytext, "REM"); }
 "++"        { printf("%-8s \t %s\n", yytext, "INC"); }
-"--"        { printf("%-8s \t %s\n", yytext, "EDC"); }
+"--"        { printf("%-8s \t %s\n", yytext, "DEC"); }
 ">"         { printf("%-8s \t %s\n", yytext, "GTR"); }
 "<"         { printf("%-8s \t %s\n", yytext, "LSS"); }
 ">="        { printf("%-8s \t %s\n", yytext, "GEQ"); }
@@ -54,24 +74,12 @@ string  "[\x00-\x7F]*"
 ";"         { printf("%-8s \t %s\n", yytext, "SEMICOLON"); }
 ","         { printf("%-8s \t %s\n", yytext, "COMMA"); }
 "\""        { printf("%-8s \t %s\n", yytext, "QUOTA"); }
-"\n"        { printf("%-8s \t %s\n", yytext, "NEWLINE"); }
+"\n"        { printf("%-8s \t %s\n", "", "NEWLINE");++line_num; }
 {inumber}   { printf("%-8s \t %s\n", yytext, "INT_LIT"); }
 {fnumber}   { printf("%-8s \t %s\n", yytext, "FLOAT_LIT"); }
-{string}    { printf("%-8s \t %s\n", yytext, "STRING_LIT"); }
+{string}    { sub_string(yytext);}
 {id}        { printf("%-8s \t %s\n", yytext, "IDENT"); }
 {comment}   { printf("%-8s \t %s\n", yytext, "COMMENT"); }
-"print"     { printf("%-8s \t %s\n", yytext, "PRINT"); }
-"println"   { printf("%-8s \t %s\n", yytext, "PRINTLN"); }
-"if"        { printf("%-8s \t %s\n", yytext, "IF"); }
-"else"      { printf("%-8s \t %s\n", yytext, "ELSE"); }
-"for"       { printf("%-8s \t %s\n", yytext, "FOR"); }
-"int32"     { printf("%-8s \t %s\n", yytext, "INT"); }
-"float32"   { printf("%-8s \t %s\n", yytext, "FLOAT"); }
-"string"    { printf("%-8s \t %s\n", yytext, "STRING"); }
-"bool"      { printf("%-8s \t %s\n", yytext, "BOOL"); }
-"true"      { printf("%-8s \t %s\n", yytext, "TRUE"); }
-"false"     { printf("%-8s \t %s\n", yytext, "FALSE"); }
-"var"       { printf("%-8s \t %s\n", yytext, "VAR"); }
 <<EOF>>     { line_num++; yyterminate(); }
 .           {;}
 
