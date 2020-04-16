@@ -18,6 +18,25 @@
 	{ printf("%-8s \t %s\n", "\"", "QUOTA"); }
 	return sub;
     }
+    void c_comment_(char* str){
+	int size = strlen(str);
+	int counter=0;
+	for(int i=0;i<size;++i){
+		if(str[i]=='\n'){
+			++line_num;
+			++comment_num;
+			++counter;
+			if(counter){	
+				printf("\n%-8s\t %s\n","","C Comment");	
+			}
+		
+		}
+		else{
+			printf("%c",str[i]);
+		}	
+	}
+	printf("%-7s\t %s\n","","C Comment");
+    }
 %}
 
 /* Define regular expression label */
@@ -26,7 +45,9 @@ digit [0-9]
 id {letter}+({letter}|{digit})*
 inumber {digit}+
 fnumber ({digit}*\.{digit}+)
-comment \/\*(.\n)*\*\/
+/* c_comment \/\*.*\n|.*\*\/ */
+c_comment \/\*(\*(\/)|[^*])*\*\/
+cpp_comment \/\/.*
 /*string  "[\x00-\x7F]*"*/
 string \"([^']|\'\')*\"
 /* Rules section */
@@ -43,6 +64,12 @@ string \"([^']|\'\')*\"
 "true"      { printf("%-8s \t %s\n", yytext, "TRUE"); }
 "false"     { printf("%-8s \t %s\n", yytext, "FALSE"); }
 "var"       { printf("%-8s \t %s\n", yytext, "VAR"); }
+{inumber}   { printf("%-8s \t %s\n", yytext, "INT_LIT"); }
+{fnumber}   { printf("%-8s \t %s\n", yytext, "FLOAT_LIT"); }
+{string}    { sub_string(yytext);}
+{id}        { printf("%-8s \t %s\n", yytext, "IDENT"); }
+{c_comment}   {++comment_num;c_comment_(yytext); }
+{cpp_comment} { printf("%-8s \t %s\n",yytext , "C++ Comment");++comment_num; }
 "+"         { printf("%-8s \t %s\n", yytext, "ADD"); }
 "-"         { printf("%-8s \t %s\n", yytext, "SUB"); }
 "*"         { printf("%-8s \t %s\n", yytext, "MUL"); }
@@ -75,11 +102,6 @@ string \"([^']|\'\')*\"
 ","         { printf("%-8s \t %s\n", yytext, "COMMA"); }
 "\""        { printf("%-8s \t %s\n", yytext, "QUOTA"); }
 "\n"        { printf("%-8s \t %s\n", "", "NEWLINE");++line_num; }
-{inumber}   { printf("%-8s \t %s\n", yytext, "INT_LIT"); }
-{fnumber}   { printf("%-8s \t %s\n", yytext, "FLOAT_LIT"); }
-{string}    { sub_string(yytext);}
-{id}        { printf("%-8s \t %s\n", yytext, "IDENT"); }
-{comment}   { printf("%-8s \t %s\n", yytext, "COMMENT"); }
 <<EOF>>     { line_num++; yyterminate(); }
 .           {;}
 
@@ -105,3 +127,4 @@ int main(int argc, char *argv[])
     fclose(yyin);
     return 0;
 }
+
