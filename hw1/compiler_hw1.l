@@ -9,8 +9,9 @@
 
     int line_num = 0;
     int comment_num = 0;
+    int  new_line=-1;  /*-1  for initial state; 0 for new line; 1 for comment */
     char* sub_string(char* str){
-
+	/*seperate quotas*/
 	{ printf("%-8s \t %s\n", "\"", "QUOTA"); }
 	char* sub = calloc(strlen(str)-2,sizeof(char));
 	strncpy(sub,str+1,strlen(str)-2);
@@ -19,6 +20,8 @@
 	return sub;
     }
     void c_comment_(char* str){
+	if(new_line!=1){++comment_num;}
+	new_line=1;
 	int size = strlen(str);
 	int counter=0;
 	for(int i=0;i<size;++i){
@@ -46,10 +49,11 @@ id {letter}+({letter}|{digit})*
 inumber {digit}+
 fnumber ({digit}*\.{digit}+)
 /* c_comment \/\*.*\n|.*\*\/ */
-c_comment \/\*(\*(\/)|[^*])*\*\/
+/*c_comment \/\*(\*(\/)|[^*])*\*\/*/
+c_comment \/\*([^*]|(\*[^/]))*\*\/
 cpp_comment \/\/.*
-/*string  "[\x00-\x7F]*"*/
-string \"([^']|\'\')*\"
+string  \"[\x00-\x21|\x23-\x7f]*\"
+/*string \"([^']|\'\')*\"*/
 /* Rules section */
 %%
 "print"     { printf("%-8s \t %s\n", yytext, "PRINT"); }
@@ -68,8 +72,8 @@ string \"([^']|\'\')*\"
 {fnumber}   { printf("%-8s \t %s\n", yytext, "FLOAT_LIT"); }
 {string}    { sub_string(yytext);}
 {id}        { printf("%-8s \t %s\n", yytext, "IDENT"); }
-{c_comment}   {++comment_num;c_comment_(yytext); }
-{cpp_comment} { printf("%-8s \t %s\n",yytext , "C++ Comment");++comment_num; }
+{c_comment}   {c_comment_(yytext); }
+{cpp_comment} { printf("%-8s \t %s\n",yytext , "C++ Comment");if(new_line!=1)++comment_num; }
 "+"         { printf("%-8s \t %s\n", yytext, "ADD"); }
 "-"         { printf("%-8s \t %s\n", yytext, "SUB"); }
 "*"         { printf("%-8s \t %s\n", yytext, "MUL"); }
@@ -101,7 +105,7 @@ string \"([^']|\'\')*\"
 ";"         { printf("%-8s \t %s\n", yytext, "SEMICOLON"); }
 ","         { printf("%-8s \t %s\n", yytext, "COMMA"); }
 "\""        { printf("%-8s \t %s\n", yytext, "QUOTA"); }
-"\n"        { printf("%-8s \t %s\n", "", "NEWLINE");++line_num; }
+"\n"        { printf("%-8s \t %s\n", "", "NEWLINE");++line_num;new_line=0; }
 <<EOF>>     { line_num++; yyterminate(); }
 .           {;}
 
