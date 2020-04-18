@@ -48,12 +48,9 @@ digit [0-9]
 id {letter}+({letter}|{digit})*
 inumber {digit}+
 fnumber ({digit}*\.{digit}+)
-/* c_comment \/\*.*\n|.*\*\/ */
-/*c_comment \/\*(\*(\/)|[^*])*\*\/*/
 c_comment \/\*([^*]|(\*[^/]))*\*\/
 cpp_comment \/\/.*
 string  \"[\x00-\x21|\x23-\x7f]*\"
-/*string \"([^']|\'\')*\"*/
 /* Rules section */
 %%
 "print"     { printf("%-8s \t %s\n", yytext, "PRINT"); }
