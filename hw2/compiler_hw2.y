@@ -29,7 +29,7 @@
     int i_val;
     float f_val;
     char *s_val;
-    /* ... */
+    bool b_val;
 }
 
 /* Token without return */
