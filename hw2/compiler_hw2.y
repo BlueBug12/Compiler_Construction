@@ -1,4 +1,4 @@
-/*	Definition section */
+/*Definition section */
 %{
     #include "common.h" //Extern variables that communicate with lex
     // #define YYDEBUG 1
