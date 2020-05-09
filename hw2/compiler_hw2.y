@@ -47,12 +47,14 @@
 %token LAND LOR NOT //logical
 
 /*Keywords*/
-%token INT FLOAT BOOL STRING //data type
+//%token INT FLOAT BOOL STRING //data type
 %token IF ELSE FOR //conditional
 %token VAR //variable declaration
 %token PRINT PRINTLN
 
 /* Token with return, which need to sepcify type */
+%token <string> IDENT
+%token <string> INT FLOAT BOOL STRING
 %token <i_val> INT_LIT
 %token <f_val> FLOAT_LIT
 %token <s_val> STRING_LIT
@@ -80,6 +82,71 @@ StatementList
     | Statement
 ;
 
+Type 
+    : TypeName 
+    | ArrayType
+;
+
+TypeName 
+    : INT 
+    | FLOAT 
+    | STRING
+    | BOOL
+;
+
+ArrayType 
+    :  LBRACK  Expression RBRACK Type
+;
+
+
+PrimaryExpr
+    : Operand
+    | IndexExpr
+    | CoversionExpr
+;
+
+Operand
+    : Literal
+    | ID
+    | LPAREN Expression RPAREN
+;
+
+Literal
+    : INT_LIT
+    | FLOAT_LIT
+    | BOOL_LIT
+    | STRING_LIT 
+;
+
+IndexExpr
+    : PrimaryExpr LBRACK Expression RBRACK
+;
+
+ConversionExpr
+     : Type LPAREN Expression RPAREN
+;
+
+
+Statement
+    : DeclarationStmt NEWLINE
+    | SimpleStmt NEWLINE
+    | Block NEWLINE
+    | IfStmt NEWLINE
+    | ForStmt NEWLINE
+    | PrintStmt NEWLINE
+    | NEWLINE
+;
+
+SimpleStmt
+    : Assignment
+    | Expression
+    | IncDecStmt
+;
+
+
+DeclarationStmt 
+    : VAR IDENT Type [ ASSIGN Expression ]
+;
 %
 
 /* C code section */
