@@ -28,19 +28,41 @@
 %union {
     int i_val;
     float f_val;
-    char *s_val;
+    char* s_val;
     bool b_val;
 }
 
 /* Token without return */
-%token VAR
-%token INT FLOAT BOOL STRING
+/*Delimiters*/
+%token LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE //parentheses
+%token SEMICOLON
+%token COMMA
+%token QUOTA
+%token NEWLINE
+
+/*Arithmetic, relational, and logical operator*/
+%token ADD SUB MUL DIV MOD INC DEC //arithmetric
+%token LSS GTR LEQ GEQ EQL NEQ //relational
+%token ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN QUO_ASSIGN REM_ASSIGN //assignment
+%token LAND LOR NOT //logical
+
+/*Keywords*/
+%token INT FLOAT BOOL STRING //data type
+%token IF ELSE FOR //conditional
+%token VAR //variable declaration
+%token PRINT PRINTLN
 
 /* Token with return, which need to sepcify type */
 %token <i_val> INT_LIT
 %token <f_val> FLOAT_LIT
+%token <s_val> STRING_LIT
+%token <b_val> BOOL_LIT
 
 /* Nonterminal with return, which need to sepcify type */
+%type <i_val> INT_LIT
+%type <f_val> FLOAT_LIT
+%type <s_val> STRING_LIT
+%type <b_val> BOOL_LIT
 %type <type> Type TypeName ArrayType
 
 /* Yacc will start at this nonterminal */
@@ -58,7 +80,7 @@ StatementList
     | Statement
 ;
 
-%%
+%
 
 /* C code section */
 int main(int argc, char *argv[])
