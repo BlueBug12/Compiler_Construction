@@ -1,5 +1,8 @@
 /*Definition section */
 %{
+    #include <stdio.h>	
+    #include <stdbool.h>
+    #include <string.h>
     #include "common.h" //Extern variables that communicate with lex
     // #define YYDEBUG 1
     // int yydebug = 1;
@@ -7,7 +10,16 @@
     extern int yylineno;
     extern int yylex();
     extern FILE *yyin;
-
+    
+    typedef struct symbol_table stb;
+    struct symbol_table{
+	int index;
+	char* name;
+	char* type;
+	int address;
+	int lineno;
+	char* element_type;	
+    };
     void yyerror (char const *s)
     {
         printf("error:%d: %s\n", yylineno, s);
@@ -28,7 +40,7 @@
 %union {
     int i_val;
     float f_val;
-    char* s_val;
+    char* string;
     bool b_val;
 }
 
@@ -41,10 +53,10 @@
 %token NEWLINE
 
 /*Arithmetic, relational, and logical operator*/
-%token ADD SUB MUL DIV MOD INC DEC //arithmetric
+%token ADD SUB MUL QUO MOD INC DEC REM//arithmetric
 %token LSS GTR LEQ GEQ EQL NEQ //relational
 %token ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN QUO_ASSIGN REM_ASSIGN //assignment
-%token LAND LOR NOT //logical
+%token LAND LOR NOT TRUE FALSE//logical
 
 /*Keywords*/
 //%token INT FLOAT BOOL STRING //data type
@@ -57,16 +69,15 @@
 %token <string> INT FLOAT BOOL STRING
 %token <i_val> INT_LIT
 %token <f_val> FLOAT_LIT
-%token <s_val> STRING_LIT
+%token <string> STRING_LIT
 %token <b_val> BOOL_LIT
 
 /* Nonterminal with return, which need to sepcify type */
-%type <i_val> INT_LIT
-%type <f_val> FLOAT_LIT
-%type <s_val> STRING_LIT
-%type <b_val> BOOL_LIT
-%type <type> Type TypeName ArrayType
-
+//%type <i_val> INT_LIT
+//%type <f_val> FLOAT_LIT
+//%type <s_val> STRING_LIT
+//%type <b_val> BOOL_LIT
+%type <string> Type TypeName ArrayType
 /* Yacc will start at this nonterminal */
 %start Program
 
@@ -82,14 +93,15 @@ StatementList
     | Statement
 ;
 
+/*Types*/
 Type 
     : TypeName 
     | ArrayType
 ;
 
 TypeName 
-    : INT 
-    | FLOAT 
+    : INT {$$=$1;}
+    | FLOAT
     | STRING
     | BOOL
 ;
@@ -98,16 +110,61 @@ ArrayType
     :  LBRACK  Expression RBRACK Type
 ;
 
+/*Expressions*/
+Expression 
+    : UnaryExpr 
+    | Expression Binary_op Expression
+;
 
+UnaryExpr 
+    : PrimaryExpr 
+    | Unary_op UnaryExpr
+;
+
+Binary_op
+    : LOR 
+    | LAND 
+    | Cmp_op 
+    | Add_op 
+    | Mul_op
+;
+
+Cmp_op 
+    : EQL 
+    | NEQ 
+    | LSS 
+    | LEQ 
+    | GTR 
+    | GEQ
+;
+
+Add_op 
+    : ADD 
+    | SUB
+;
+
+Mul_op 
+    : MUL 
+    | QUO 
+    | REM
+;
+
+Unary_op 
+    : ADD 
+    | SUB 
+    | NOT
+;
+
+/*Primary expression*/
 PrimaryExpr
     : Operand
     | IndexExpr
-    | CoversionExpr
+    | ConversionExpr
 ;
 
 Operand
     : Literal
-    | ID
+    | IDENT
     | LPAREN Expression RPAREN
 ;
 
@@ -118,15 +175,17 @@ Literal
     | STRING_LIT 
 ;
 
+/*Index expression*/
 IndexExpr
     : PrimaryExpr LBRACK Expression RBRACK
 ;
 
+/*Coversion (type casting)*/
 ConversionExpr
      : Type LPAREN Expression RPAREN
 ;
 
-
+/*Statements*/
 Statement
     : DeclarationStmt NEWLINE
     | SimpleStmt NEWLINE
@@ -138,17 +197,112 @@ Statement
 ;
 
 SimpleStmt
-    : Assignment
+    : AssignmentStmt
     | Expression
     | IncDecStmt
 ;
 
-
+/*Declarations statements*/
 DeclarationStmt 
-    : VAR IDENT Type [ ASSIGN Expression ]
+    : VAR IDENT Type DeclarationAssign
 ;
-%
 
+DeclarationAssign
+    : ASSIGN Expression
+    | /*empty*/
+;
+
+/*Assignments statements*/
+AssignmentStmt 
+    : Expression Assign_op Expression
+;
+
+Assign_op
+    : ASSIGN 
+    | ADD_ASSIGN 
+    | SUB_ASSIGN 
+    | MUL_ASSIGN
+    | QUO_ASSIGN
+    | REM_ASSIGN
+;
+
+/*Expression statements*/
+ExpressionStmt
+    : Expression
+;
+
+/*IncDec statements*/
+IncDecStmt
+    : Expression IncDec
+;
+
+IncDec
+    : INC
+    | DEC
+;
+
+/*Block*/
+Block
+    : LBRACE StatementList RBRACE
+;
+
+StatementList
+    :  StatementList Statement 
+    |/*empty*/  
+;
+
+/*If statements*/
+IfStmt
+    : IF Condition Block ElseIfStmt
+;
+
+Condition
+    : Expression
+;
+
+OptionalIfStmt
+    : IfStmt
+    | Block
+;
+
+ElseIfStmt
+    : ElseIfStmt ELSE OptionalIfStmt
+    |/*empty*/
+;
+
+
+/*For statements*/
+ForStmt
+    : FOR ForCondition Block
+;
+
+ForCondition
+    : Condition
+    | ForClause
+;
+
+ForClause
+    : InitStmt SEMICOLON Condition SEMICOLON PosStmt
+;
+
+InitStmt
+    : SimpleStmt
+;
+
+PosStmt
+    : SimpleStmt
+;
+
+/*Print statements*/
+PrintStmt
+    : PrintType LPAREN Expression RPAREN
+;
+
+PrintType
+    : PRINT
+    | PRINTLN
+;
+%%
 /* C code section */
 int main(int argc, char *argv[])
 {
