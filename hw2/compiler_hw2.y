@@ -10,26 +10,47 @@
     extern int yylineno;
     extern int yylex();
     extern FILE *yyin;
-    
+	
+	static int scope=0;	
+    static int address=0;
     typedef struct symbol_table stb;
+
     struct symbol_table{
-	int index;
-	char* name;
-	char* type;
-	int address;
-	int lineno;
-	char* element_type;	
+		int index;
+		char* name;
+		char* type;
+		int address;
+		int lineno;
+		char* element_type;	
+		stb* next;
+		stb* prev;
+		stb* child;
+		stb* last_child;
     };
+
+	
+
     void yyerror (char const *s)
     {
         printf("error:%d: %s\n", yylineno, s);
     }
 
     /* Symbol table function - you can add new function if needed. */
-    static void create_symbol();
-    static void insert_symbol();
+    static void create_symbol(char* id,char* type, char* etype);
+    static void insert_symbol(stb* n);
     static void lookup_symbol();
     static void dump_symbol();
+	
+	stb* new_stb_node(int index,char* name, char* type,
+						char* element_type,stb* next,stb* prev,stb*child,stb* last_child);
+	
+	/*initialize the head of symbol table*/
+	stb* head = NULL;
+	stb* tail = NULL;
+	
+	char _type [7];
+	char _var [128];
+	char _etype [7];
 %}
 
 %error-verbose
@@ -101,9 +122,9 @@ Type
 
 TypeName 
     : INT {$$=$1;}
-    | FLOAT
-    | STRING
-    | BOOL
+    | FLOAT {$$=$1;}
+    | STRING {$$=$1;}
+    | BOOL {$$=$1;}
 ;
 
 ArrayType 
@@ -204,7 +225,11 @@ SimpleStmt
 
 /*Declarations statements*/
 DeclarationStmt 
-    : VAR IDENT Type DeclarationAssign
+    : VAR IDENT Type DeclarationAssign{
+		strcpy(_var,$2);
+		strcpy(_type,$3);
+		create_symbol(_var,_type,"-");				
+	}
 ;
 
 DeclarationAssign
@@ -243,7 +268,7 @@ IncDec
 
 /*Block*/
 Block
-    : LBRACE StatementList RBRACE
+    : LBRACE StatementList RBRACE{++scope;}
 ;
 
 StatementList
@@ -304,6 +329,22 @@ PrintType
 ;
 %%
 /* C code section */
+
+stb* new_stb_node(int index,char* name, char* type,
+						char* element_type,stb* next,stb* prev,stb*child,stb* last_child){
+	stb* node = malloc(sizeof(stb));
+	node->index=index;
+	node->name=name;
+	node->type=type;
+	node->address=++address;
+	node->element_type=element_type;
+	node->lineno=yylineno;
+	node->next=next;
+	node->prev=prev;
+	node->child=child;
+	node->last_child=last_child;
+	return node;
+}
 int main(int argc, char *argv[])
 {
     if (argc == 2) {
@@ -311,29 +352,56 @@ int main(int argc, char *argv[])
     } else {
         yyin = stdin;
     }
-
+	
+	head = new_stb_node(0,"","","",NULL,NULL,NULL,head);
+	tail = head;
     yylineno = 0;
     yyparse();
-
+	dump_symbol(tail);
 	printf("Total lines: %d\n", yylineno);
     fclose(yyin);
     return 0;
 }
 
-static void create_symbol() {
+static void create_symbol(char* id, char* type, char* etype){
+
+	if(tail==NULL){printf("Error stb tail\n");}
+	//else if(tail->last_child==NULL){printf("Error stb!\n");}
+	else if(tail==head){//empty stb
+		stb* n=new_stb_node(0,id,type,etype,NULL,head,NULL,NULL);
+		n->last_child=n;
+		tail=n;
+		insert_symbol(n);
+	}
+	else{
+		stb* n=new_stb_node(tail->last_child->index+1,id,type,etype,NULL,NULL,NULL,NULL);
+		tail->last_child->child=n;
+		tail->last_child=n;
+		insert_symbol(n);	
+	}
 }
 
-static void insert_symbol() {
-    printf("> Insert {%s} into symbol table (scope level: %d)\n", "XXX", 0);
+static void insert_symbol(stb* n) {
+	
+    printf("> Insert {%s} into symbol table (scope level: %d)\n", n->name, scope);
 }
 
 static void lookup_symbol() {
 }
 
-static void dump_symbol() {
+static void dump_symbol(stb* n) {
     printf("> Dump symbol table (scope level: %d)\n", 0);
     printf("%-10s%-10s%-10s%-10s%-10s%s\n",
            "Index", "Name", "Type", "Address", "Lineno", "Element type");
-    printf("%-10d%-10s%-10s%-10d%-10d%s\n",
-            0, "name", "type", 0, 0, "element type");
+	stb* pretail=tail->prev;
+	stb* temp;
+	while(tail!=NULL){
+		
+    	printf("%-10d%-10s%-10s%-10d%-10d%s\n",
+			tail->index,tail->name,tail->type,tail->address,tail->lineno,tail->element_type);
+		temp=tail;
+		tail=tail->child;
+		free(temp);
+	}
+    tail=pretail;
 }
