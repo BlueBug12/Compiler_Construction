@@ -38,13 +38,13 @@ fnumber ({digit}*\.{digit}+)
 <STR>[^\"]* { yylval.string = strdup(yytext);
                 return STRING_LIT;
             }
-"+"         { printf("ADD\n");return ADD; }
-"-"         { printf("SUB\n");return SUB; }
-"*"         { printf("MUL\n");return MUL; }
-"/"         { printf("QUO\n");return QUO; }
-"%"         { printf("REM\n");return REM; }
-"++"        { printf("INC\n");return INC; }
-"--"        { printf("DEC\n");return DEC; }
+"+"         { return ADD; }
+"-"         { return SUB; }
+"*"         { return MUL; }
+"/"         { return QUO; }
+"%"         { return REM; }
+"++"        {printf("INC\n"); return INC; }
+"--"        {printf("DEC\n"); return DEC; }
 
 ">"         { return GTR; }
 "<"         { return LSS; }
