@@ -30,10 +30,10 @@ fnumber ({digit}*\.{digit}+)
 <CMT>.      {;}
 "//".*      {;}
 "\""        { BEGIN(STR);
-                return '"';
+               // return '"';
             }
 <STR>"\""   { BEGIN(INITIAL);
-                return '"';
+                //return '"';
             }
 <STR>[^\"]* { yylval.string = strdup(yytext);
                 return STRING_LIT;

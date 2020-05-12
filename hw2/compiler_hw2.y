@@ -108,7 +108,8 @@
 //%type <f_val> FLOAT_LIT
 //%type <s_val> STRING_LIT
 //%type <b_val> BOOL_LIT
-%type <string> Type TypeName ArrayType PrintType
+%type <string> Type TypeName ArrayType PrintType Operand Binary_op
+%type <string> ConversionExpr PrimaryExpr UnaryExpr Literal IndexExpr Expression
 /* Yacc will start at this nonterminal */
 %start Program
 
@@ -138,26 +139,26 @@ TypeName
 ;
 
 ArrayType 
-    :  LBRACK  Expression RBRACK Type
+    :  LBRACK  Expression RBRACK Type{$$=$4;}
 ;
 
 /*Expressions*/
 Expression 
-    : UnaryExpr 
-    | Expression Binary_op Expression
+    : UnaryExpr {$$=$1;}
+    | Expression Binary_op Expression{$$=$2;}//error detect
 ;
 
 UnaryExpr 
-    : PrimaryExpr 
-    | Unary_op UnaryExpr
+    : PrimaryExpr{$$=$1;} 
+    | Unary_op UnaryExpr{$$=$2;}
 ;
 
 Binary_op
-    : LOR{stack(&stack_top,"LOR");} 
-    | LAND{stack(&stack_top,"LAND");}
-    | Cmp_op 
-    | Add_op 
-    | Mul_op
+    : LOR{stack(&stack_top,"LOR");$$="bool";} 
+    | LAND{stack(&stack_top,"LAND");$$="bool";}
+    | Cmp_op{$$="bool";} 
+    | Add_op{$$="unknown";}
+    | Mul_op{$$="unknown";}
 ;
 
 Cmp_op 
@@ -188,34 +189,38 @@ Unary_op
 
 /*Primary expression*/
 PrimaryExpr
-    : Operand
-    | IndexExpr
-    | ConversionExpr
+    : Operand{$$=$1;}
+    | IndexExpr{$$=$1;}
+    | ConversionExpr{$$=$1;}
 ;
 
 Operand
-    : Literal
-    | IDENT{lookup_symbol($1,tail);}
-    | LPAREN{stack(&stack_top,"(");} Expression RPAREN{stack(&stack_top,")");}
+    : Literal{$$=$1;}
+    | IDENT{lookup_symbol($1,tail);$$=$1;}
+	| LPA  Expression RPA{$$=$2;}
+    //| LPAREN{stack(&stack_top,"(");}  Expression{$$=$2;} RPAREN{stack(&stack_top,")");}
 ;
-
+LPA
+	:LPAREN{stack(&stack_top,"(");}
+RPA
+	:RPAREN{stack(&stack_top,")");}
 Literal
-    : INT_LIT{printf("INT_LIT %d\n",$1);}
-    | FLOAT_LIT{printf("FLOAT_LIT %f\n",$1);}
-    | BOOL_LIT{printf("BOOL_LIT %d\n",$1);}
-    | STRING_LIT{printf("STRING_LIT %s\n",$1);} 
-	| TRUE{printf("TRUE\n");}
-	| FALSE{printf("FALSE\n");}
+    : INT_LIT{printf("INT_LIT %d\n",$1);$$="int32";}
+    | FLOAT_LIT{printf("FLOAT_LIT %f\n",$1);$$="float32";}
+    | BOOL_LIT{printf("BOOL_LIT %d\n",$1);$$="bool";}
+    | STRING_LIT{printf("STRING_LIT %s\n",$1);$$="string";} 
+	| TRUE{printf("TRUE\n");$$="bool";}
+	| FALSE{printf("FALSE\n");$$="bool";}
 ;
 
 /*Index expression*/
 IndexExpr
-    : PrimaryExpr LBRACK Expression RBRACK
+    : PrimaryExpr LBRACK Expression RBRACK{$$=$1;}//need to be checked
 ;
 
 /*Coversion (type casting)*/
 ConversionExpr
-     : Type LPAREN Expression RPAREN
+     : Type LPAREN Expression RPAREN{$$=$1;}
 ;
 
 /*Statements*/
@@ -283,7 +288,7 @@ IncDec
 
 /*Block*/
 Block
-    : LBRACE StatementList RBRACE{++scope;}
+    : LBRACE{++scope;} StatementList RBRACE{--scope;dump_symbol(tail);}
 ;
 
 StatementList
@@ -335,7 +340,7 @@ PosStmt
 
 /*Print statements*/
 PrintStmt
-    : PrintType LPAREN Expression RPAREN{stack(&stack_top,"#");printf("%s bool\n",$1);}
+    : PrintType LPAREN Expression RPAREN{stack(&stack_top,"#");printf("%s %s\n",$1,"bool");}
 ;
 
 PrintType
