@@ -48,7 +48,7 @@
 	
 	stb* new_stb_node(int index,char* name, char* type,
 						char* element_type,stb* next,stb* prev,stb*child,stb* last_child);
-	int precedence(char* op);
+	int precedence(char* op,bool in_stack);
 	void push(char* op,op_stack**top);
 	char* pop(op_stack** top);	
 	void stack(op_stack** top,char* op);
@@ -83,7 +83,7 @@
 %token NEWLINE
 
 /*Arithmetic, relational, and logical operator*/
-%token ADD SUB MUL QUO MOD INC DEC REM//arithmetric
+%token ADD SUB MUL QUO MOD INC DEC REM POS NEG//arithmetric
 %token LSS GTR LEQ GEQ EQL NEQ //relational
 %token ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN QUO_ASSIGN REM_ASSIGN //assignment
 %token LAND LOR NOT TRUE FALSE//logical
@@ -101,13 +101,14 @@
 %token <f_val> FLOAT_LIT
 %token <string> STRING_LIT
 %token <b_val> BOOL_LIT
-
+//%token <string> PRINTLN
+//%token <string> PRINT
 /* Nonterminal with return, which need to sepcify type */
 //%type <i_val> INT_LIT
 //%type <f_val> FLOAT_LIT
 //%type <s_val> STRING_LIT
 //%type <b_val> BOOL_LIT
-%type <string> Type TypeName ArrayType
+%type <string> Type TypeName ArrayType PrintType
 /* Yacc will start at this nonterminal */
 %start Program
 
@@ -180,8 +181,8 @@ Mul_op
 ;
 
 Unary_op 
-    : ADD{stack(&stack_top,"uADD");}
-    | SUB{stack(&stack_top,"uSUB");}
+    : ADD{stack(&stack_top,"POS");}
+    | SUB{stack(&stack_top,"NEG");}
     | NOT{stack(&stack_top,"NOT");}
 ;
 
@@ -195,14 +196,16 @@ PrimaryExpr
 Operand
     : Literal
     | IDENT{lookup_symbol($1,tail);}
-    | LPAREN Expression RPAREN
+    | LPAREN{stack(&stack_top,"(");} Expression RPAREN{stack(&stack_top,")");}
 ;
 
 Literal
-    : INT_LIT
-    | FLOAT_LIT
-    | BOOL_LIT
-    | STRING_LIT 
+    : INT_LIT{printf("INT_LIT %d\n",$1);}
+    | FLOAT_LIT{printf("FLOAT_LIT %f\n",$1);}
+    | BOOL_LIT{printf("BOOL_LIT %d\n",$1);}
+    | STRING_LIT{printf("STRING_LIT %s\n",$1);} 
+	| TRUE{printf("TRUE\n");}
+	| FALSE{printf("FALSE\n");}
 ;
 
 /*Index expression*/
@@ -332,21 +335,21 @@ PosStmt
 
 /*Print statements*/
 PrintStmt
-    : PrintType LPAREN Expression RPAREN
+    : PrintType LPAREN Expression RPAREN{stack(&stack_top,"#");printf("%s bool\n",$1);}
 ;
 
 PrintType
-    : PRINT
-    | PRINTLN
+    : PRINT{$$="PRINT";}
+    | PRINTLN{$$="PRINTLN";}
 ;
 %%
 /* C code section */
-int precedence(char* op){
-	if(!strcmp(op,"("))
+int precedence(char* op,bool in_stack){
+	if(!strcmp(op,"(")&&in_stack==0)
 		return 0;
-	else if(!strcmp(op,"LBRACK"))
+	else if(!strcmp(op,"["))
 		return 1;
-	else if(!strcmp(op,"uADD")||!strcmp(op,"uSUB")||!strcmp(op,"NOT"))
+	else if(!strcmp(op,"POS")||!strcmp(op,"NEG")||!strcmp(op,"NOT"))
 		return 2;
 	else if(!strcmp(op,"MUL")||!strcmp(op,"QUO")||!strcmp(op,"REM"))
 		return 3;
@@ -358,6 +361,8 @@ int precedence(char* op){
 		return 6;
 	else if(!strcmp(op,"LOR"))
 		return 7;
+	else if(!strcmp(op,"("))
+		return 8;
 	else{
 		printf("Error: unexpected operator in operator stack!\n");
 		return -1;
@@ -405,6 +410,14 @@ stb* new_stb_node(int index,char* name, char* type,
 	return node;
 }
 
+void test(op_stack* ptr){
+	printf("stack: ");
+	while(ptr!=NULL){
+		printf("%s ",ptr->op);
+		ptr=ptr->prev;
+	}
+	printf("\n");
+}
 void push(char* op, op_stack** top){
 	op_stack* temp=malloc(sizeof(op_stack));
 	temp->op=malloc(sizeof(op));
@@ -430,11 +443,13 @@ void stack(op_stack** top,char* op){
 	if(!strcmp("(",op)||!strcmp("[",op)||!strcmp("{",op))
 		push(op,top);
 	else if(!strcmp(")",op)){
-		while(strcmp((*top)->op,"(")){
+		while((*top)!=NULL&&strcmp((*top)->op,"(")){
 			char* token=pop(top);
 			printf("%s\n",token);
 			free(token);
+			
 		}
+		if((*top)==NULL){printf("NO match LPARN\n");}
 		free(pop(top));
 	}
 	else if(!strcmp("]",op)){	
@@ -461,18 +476,19 @@ void stack(op_stack** top,char* op){
 			free(token);
 		}
 	}
-	else if((*top)==NULL||precedence(op)<=precedence((*top)->op)){
+	else if(!strcmp("NOT",op)){push(op,top);}
+	else if((*top)==NULL||precedence(op,0)<precedence((*top)->op,1)){
 		push(op,top);
 	}
-
+	
 	else{
 		do{	
 			char* token=pop(top);
 			printf("%s\n",token);
 			free(token);
-		}while((*top)!=NULL&&precedence(op)>precedence((*top)->op));
+		}while((*top)!=NULL&&precedence(op,0)>=precedence((*top)->op,1));
+		push(op,top);
 	}
-	
 }
 int main(int argc, char *argv[])
 {
@@ -541,7 +557,7 @@ static void dump_symbol(stb* n) {
            "Index", "Name", "Type", "Address", "Lineno", "Element type");
 	stb* pretail=tail->prev;
 	stb* temp;
-	while(tail!=NULL){
+	while(tail!=NULL&&tail!=head){
 		
     	printf("%-10d%-10s%-10s%-10d%-10d%s\n",
 			tail->index,tail->name,tail->type,tail->address,tail->lineno,tail->element_type);
