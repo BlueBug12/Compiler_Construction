@@ -116,7 +116,7 @@ StatementList
 
 /*Types*/
 Type 
-    : TypeName 
+    : TypeName{$$=$1;}
     | ArrayType
 ;
 
@@ -226,8 +226,11 @@ SimpleStmt
 /*Declarations statements*/
 DeclarationStmt 
     : VAR IDENT Type DeclarationAssign{
+		//printf("test for type %s\n",$3);
+		//printf("test for id %s\n",$2);
 		strcpy(_var,$2);
 		strcpy(_type,$3);
+		//strcpy(_var)
 		create_symbol(_var,_type,"-");				
 	}
 ;
@@ -368,12 +371,14 @@ static void create_symbol(char* id, char* type, char* etype){
 	if(tail==NULL){printf("Error stb tail\n");}
 	//else if(tail->last_child==NULL){printf("Error stb!\n");}
 	else if(tail==head){//empty stb
+		printf("in function %s\n",id);
 		stb* n=new_stb_node(0,id,type,etype,NULL,head,NULL,NULL);
 		n->last_child=n;
 		tail=n;
 		insert_symbol(n);
 	}
 	else{
+		printf("in function else %s\n",id);
 		stb* n=new_stb_node(tail->last_child->index+1,id,type,etype,NULL,NULL,NULL,NULL);
 		tail->last_child->child=n;
 		tail->last_child=n;

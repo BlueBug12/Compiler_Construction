@@ -81,21 +81,19 @@ fnumber ({digit}*\.{digit}+)
 "else"      { return ELSE; }
 "for"       { return FOR; }
 
-"int32"     { return INT; }
-"float32"   { return FLOAT;}
-"string"    { return STRING; }
-"bool"      { return BOOL; }
-"true"      {return TRUE;}
-"false"     {return FALSE;}
-"var"       { return VAR; }
+"int32"     { yylval.string="int32";return INT; }
+"float32"   { yylval.string="floast32";return FLOAT;}
+"string"    { yylval.string="string";return STRING; }
+"bool"      { yylval.string="bool";return BOOL; }
+"true"      { yylval.string="true";return TRUE;}
+"false"     { yylval.string="false";return FALSE;}
+"var"       { yylval.string="var";return VAR; }
 
 {inumber}   { yylval.i_val = atoi(yytext);
                 return INT_LIT;
             }
-{fnumber}   { yylval.f_val = atof(yytext);
-		return FLOAT_LIT; }
-{id}        { yylval.string = strdup(yytext);
-		return IDENT; }
+{fnumber}   { yylval.f_val = atof(yytext);return FLOAT_LIT; }
+{id}        { yylval.string = strdup(yytext);return IDENT; }
 
 <<EOF>>     { static int once = 0;
                 if (once++) {
