@@ -159,11 +159,11 @@ Expression
 ;*/
 
 Expression 
-    : Expression Cmp_op B1{$$="bool";}//error detect
+    : Expression LO B1{$$="bool";}//error detect
 	| B1{$$=$1;}
 ;
 B1
-	:B1 LO B2{
+	:B1 LA B2{
 		if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
@@ -172,7 +172,7 @@ B1
 	|B2{$$=$1;}
 ;
 B2
-	:B2 LA B3{
+	:B2 Cmp_op B3{
 		if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
@@ -324,8 +324,8 @@ DeclarationAssign
 /*Assignments statements*/
 AssignmentStmt 
     : Expression Assign_op Expression{
-		if($1!=$3){
-			printf("error:%d: invalid operation: %s (mismatched types %s and %s)",yylineno,$2,$1,$3);
+		if(strcmp($1,$3)){
+			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
 	}
 ;
