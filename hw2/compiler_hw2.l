@@ -82,7 +82,7 @@ fnumber ({digit}*\.{digit}+)
 "for"       { return FOR; }
 
 "int32"     { yylval.string="int32";return INT; }
-"float32"   { yylval.string="floast32";return FLOAT;}
+"float32"   { yylval.string="float32";return FLOAT;}
 "string"    { yylval.string="string";return STRING; }
 "bool"      { yylval.string="bool";return BOOL; }
 "true"      { yylval.string="true";return TRUE;}

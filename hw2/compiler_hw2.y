@@ -12,7 +12,7 @@
     extern FILE *yyin;
 	
 	static int scope=0;	
-    static int address=-2;
+    static int address=-1;
     typedef struct symbol_table stb;
 	typedef struct operator_stack op_stack;
 
@@ -22,8 +22,9 @@
 		char* type;
 		int address;
 		int lineno;
+		int scope;
 		char* element_type;	
-		stb* next;
+		//stb* next;
 		stb* prev;
 		stb* child;
 		stb* last_child;
@@ -47,13 +48,13 @@
     static void dump_symbol(stb* n);
 	
 	stb* new_stb_node(int index,char* name, char* type,
-						char* element_type,stb* next,stb* prev,stb*child,stb* last_child);
+						char* element_type,stb* prev,stb*child,stb* last_child);
 	int precedence(char* op,bool in_stack);
 	void push(char* op,op_stack**top);
 	char* pop(op_stack** top);	
 	void stack(op_stack** top,char* op);
 	/*initialize the head of symbol table*/
-	stb* head = NULL;
+	//stb* head = NULL;
 	stb* tail = NULL;
 	
 	op_stack* stack_top=NULL;
@@ -393,7 +394,7 @@ int precedence(char* op,bool in_stack){
 	}*/
 }
 stb* new_stb_node(int index,char* name, char* type,
-						char* element_type,stb* next,stb* prev,stb*child,stb* last_child){
+						char* element_type,stb* prev,stb*child,stb* last_child){
 	stb* node = malloc(sizeof(stb));
 	node->index=index;
 	node->name=malloc(sizeof(name));
@@ -403,12 +404,11 @@ stb* new_stb_node(int index,char* name, char* type,
 	strcpy(node->type,type);
 
 	node->address=++address;
-	
+	node->scope=scope;
 	node->element_type=malloc(sizeof(element_type));
 	strcpy(node->element_type,element_type);
 
 	node->lineno=yylineno;
-	node->next=next;
 	node->prev=prev;
 	node->child=child;
 	node->last_child=last_child;
@@ -503,11 +503,11 @@ int main(int argc, char *argv[])
         yyin = stdin;
     }
 	
-	head = new_stb_node(0,"","","",NULL,NULL,NULL,head);
-	tail = head;
+	//head = new_stb_node(0,"","","",NULL,NULL,NULL,head);
+	//tail = head;
 
 	//stack_top = malloc(sizeof(op_stack));
-	stack_top =NULL;
+	//stack_top =NULL;
 	//push("#",&stack_top);
 
     yylineno = 0;
@@ -520,18 +520,14 @@ int main(int argc, char *argv[])
 
 static void create_symbol(char* id, char* type, char* etype){
 
-	if(tail==NULL){printf("Error stb tail\n");}
-	//else if(tail->last_child==NULL){printf("Error stb!\n");}
-	else if(tail==head){//empty stb
-		//printf("in function %s\n",id);
-		stb* n=new_stb_node(0,id,type,etype,NULL,head,NULL,NULL);
+	if(tail==NULL||tail->scope!=scope){//empty symbol table or new scope
+		stb* n=new_stb_node(0,id,type,etype,tail,NULL,NULL);
 		n->last_child=n;
 		tail=n;
 		insert_symbol(n);
 	}
 	else{
-		//printf("in function else %s\n",id);
-		stb* n=new_stb_node(tail->last_child->index+1,id,type,etype,NULL,NULL,NULL,NULL);
+		stb* n=new_stb_node(tail->last_child->index+1,id,type,etype,NULL,NULL,NULL);
 		tail->last_child->child=n;
 		tail->last_child=n;
 		insert_symbol(n);	
@@ -557,12 +553,15 @@ static void lookup_symbol(char* id, stb* n) {
 }
 
 static void dump_symbol(stb* n) {
-    printf("> Dump symbol table (scope level: %d)\n", 0);
+	int s=0;
+	if(tail!=NULL){s=tail->scope;}
+    printf("> Dump symbol table (scope level: %d)\n", s);
     printf("%-10s%-10s%-10s%-10s%-10s%s\n",
            "Index", "Name", "Type", "Address", "Lineno", "Element type");
+	if(tail==NULL)return;
 	stb* pretail=tail->prev;
-	stb* temp;
-	while(tail!=NULL&&tail!=head){
+	stb* temp=tail;
+	while(tail!=NULL){
 		
     	printf("%-10d%-10s%-10s%-10d%-10d%s\n",
 			tail->index,tail->name,tail->type,tail->address,tail->lineno,tail->element_type);
