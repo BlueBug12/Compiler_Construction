@@ -53,12 +53,13 @@
 	void push(char* op,op_stack**top);
 	char* pop(op_stack** top);	
 	void stack(op_stack** top,char* op);
+	char* find_type(char* id);
 	/*initialize the head of symbol table*/
 	//stb* head = NULL;
 	stb* tail = NULL;
 	
 	op_stack* stack_top=NULL;
-	char _type [8];
+	char _type [9];
 	char _var [128];
 	char _etype [7];
 %}
@@ -102,15 +103,10 @@
 %token <f_val> FLOAT_LIT
 %token <string> STRING_LIT
 %token <b_val> BOOL_LIT
-//%token <string> PRINTLN
-//%token <string> PRINT
 /* Nonterminal with return, which need to sepcify type */
-//%type <i_val> INT_LIT
-//%type <f_val> FLOAT_LIT
-//%type <s_val> STRING_LIT
-//%type <b_val> BOOL_LIT
 %type <string> Type TypeName ArrayType PrintType Operand Binary_op
 %type <string> ConversionExpr PrimaryExpr UnaryExpr Literal IndexExpr Expression
+%type <string> B1 B2 B3 B4
 /* Yacc will start at this nonterminal */
 %start Program
 
@@ -132,7 +128,10 @@ Type
     | ArrayType{
 		//$$="array";
 		_type[0]='a';
-		strncpy(_type+1,$1,strlen($1)-1);
+		//printf("test  %d cececcec\n",strlen($1));
+//		strcpy(_etype,$1);
+		strncpy(_type+1,$1,strlen($1));
+		//printf("test    %s!!!!!!!!11\n",_type);
 		$$=_type;
 	}
 ;
@@ -147,25 +146,59 @@ TypeName
 ArrayType 
     :  LBRACK  Expression RBRACK Type{$$=$4;}
 ;
-
+LBR
+	:LBRACK{stack(&stack_top,"[");}
+RBR
+	:RBRACK{stack(&stack_top,"]");}
 /*Expressions*/
+/*
 Expression 
     : UnaryExpr {$$=$1;}
     | Expression Binary_op Expression{$$=$2;}//error detect
-;
+;*/
 
+Expression 
+    : Expression Cmp_op B1{$$="bool";}//error detect
+	| B1{$$=$1;}
+;
+B1
+	:B1 LOR{stack(&stack_top,"LOR");} B2{$$="bool";}
+	|B2{$$=$1;}
+;
+B2
+	:B2 LAND{stack(&stack_top,"LAND");} B3{$$="bool";}
+	|B3{$$=$1;}
+;
+B3
+	:B3 Add_op B4{
+		if($1!=$3)
+			$$="float32";//conversion
+		else
+			$$=$1;
+	}
+	|B4{$$=$1;}
+;
+B4
+	:B4 Mul_op UnaryExpr{	
+		if($1!=$3)
+			$$="float32";//conversion
+		else
+			$$=$1;
+	}
+	|UnaryExpr{$$=find_type($1);}
+;
 UnaryExpr 
     : PrimaryExpr{$$=$1;} 
     | Unary_op UnaryExpr{$$=$2;}
 ;
-
+/*
 Binary_op
     : LOR{stack(&stack_top,"LOR");$$="bool";} 
     | LAND{stack(&stack_top,"LAND");$$="bool";}
     | Cmp_op{$$="bool";} 
     | Add_op{$$="unknown";}
     | Mul_op{$$="unknown";}
-;
+;*/
 
 Cmp_op 
     : EQL{stack(&stack_top,"EQL");} 
@@ -221,7 +254,7 @@ Literal
 
 /*Index expression*/
 IndexExpr
-    : PrimaryExpr LBRACK Expression RBRACK{$$=$1;}//need to be checked
+    : PrimaryExpr LBR Expression RBR{$$=$1;}//need to be checked
 ;
 
 /*Coversion (type casting)*/
@@ -249,22 +282,15 @@ SimpleStmt
 /*Declarations statements*/
 DeclarationStmt 
     : VAR IDENT Type DeclarationAssign{
-		//printf("test for type %s\n",$3);
-		//printf("test for id %s\n",$2);
-		//strcpy(_type,$3);
 		strcpy(_var,$2);
-		//create_symbol(_var,_type,"-");
-
 
 		if($3[0]=='a'){
-			//strncpy(_type,$3,1);
 			create_symbol(_var,"array",_type+1);				
 		}
 		else{
 			strcpy(_type,$3);
 			create_symbol(_var,_type,"-");				
 		}
-		//strcpy(_var)
 	}
 ;
 
@@ -279,7 +305,7 @@ AssignmentStmt
 ;
 
 Assign_op
-    : ASSIGN 
+    : ASSIGN {stack(&stack_top,"ASSIGN");}
     | ADD_ASSIGN 
     | SUB_ASSIGN 
     | MUL_ASSIGN
@@ -356,7 +382,7 @@ PosStmt
 
 /*Print statements*/
 PrintStmt
-    : PrintType LPAREN Expression RPAREN{stack(&stack_top,"#");printf("%s %s\n",$1,"bool");}
+    : PrintType LPAREN Expression RPAREN{stack(&stack_top,"#");printf("%s %s\n",$1,$3);}
 ;
 
 PrintType
@@ -368,7 +394,7 @@ PrintType
 int precedence(char* op,bool in_stack){
 	if(!strcmp(op,"(")&&in_stack==0)
 		return 0;
-	else if(!strcmp(op,"["))
+	else if(!strcmp(op,"[")&&in_stack==0)
 		return 1;
 	else if(!strcmp(op,"POS")||!strcmp(op,"NEG")||!strcmp(op,"NOT"))
 		return 2;
@@ -382,31 +408,14 @@ int precedence(char* op,bool in_stack){
 		return 6;
 	else if(!strcmp(op,"LOR"))
 		return 7;
-	else if(!strcmp(op,"("))
+	else if(!strcmp(op,"ASSIGN"))
 		return 8;
+	else if(!strcmp(op,"(")||!strcmp(op,"[")||!strcmp(op,"{"))
+		return 9;
 	else{
 		printf("Error: unexpected operator in operator stack!\n");
 		return -1;
-	}/*
-	switch(op){
-		case "[":
-			return 1;
-		case "++": case "--": case "!":
-			return 2;
-		case "*": case "/": case "%":
-			return 3;
-		case "+": case "-": 
-			return 4;
-		case "<": case ">": case "<=": case ">=": case "==": case "!=":
-			return 5;
-		case "&&":
-			return 6;
-		case "||":
-			return 6;
-		default:
-			printf("unexpected operator: %s\n",op);
-		 	return -1;
-	}*/
+	}
 }
 stb* new_stb_node(int index,char* name, char* type,
 						char* element_type,stb* prev,stb*child,stb* last_child){
@@ -510,6 +519,30 @@ void stack(op_stack** top,char* op){
 		push(op,top);
 	}
 }
+
+char* find_type(char* id){
+	stb* temp= tail;
+	while(temp!=NULL&&strcmp(temp->name,id)){
+		temp=temp->child;
+	}
+	if(temp==NULL){
+		//printf("Error: find ID in empty stack!\n");
+		return "unknown";
+	}
+	else{
+		char* t;
+		if(!strcmp(temp->type,"array")){
+			t=malloc(sizeof(temp->element_type));
+			strcpy(t,temp->element_type);
+		}
+		else{	
+			char* t=malloc(sizeof(temp->type));
+			strcpy(t,temp->type);
+		}
+		return t;
+	}
+}
+
 int main(int argc, char *argv[])
 {
     if (argc == 2) {
