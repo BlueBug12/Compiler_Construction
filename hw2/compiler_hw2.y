@@ -331,7 +331,7 @@ IncDec
 
 /*Block*/
 Block
-    : LBRACE{++scope;} StatementList RBRACE{--scope;dump_symbol(tail);}
+    : LBRACE{++scope;} StatementList{dump_symbol(tail);} RBRACE{--scope;}
 ;
 
 StatementList
@@ -341,7 +341,7 @@ StatementList
 
 /*If statements*/
 IfStmt
-    : IF Condition Block ElseIfStmt
+    : IF Condition{stack(&stack_top,"#");} Block ElseIfStmt
 ;
 
 Condition
@@ -605,12 +605,10 @@ static void lookup_symbol(char* id, stb* n) {
 }
 
 static void dump_symbol(stb* n) {
-	int s=0;
-	if(tail!=NULL){s=tail->scope;}
-    printf("> Dump symbol table (scope level: %d)\n", s);
+    printf("> Dump symbol table (scope level: %d)\n", scope);
     printf("%-10s%-10s%-10s%-10s%-10s%s\n",
            "Index", "Name", "Type", "Address", "Lineno", "Element type");
-	if(tail==NULL)return;
+	if(tail==NULL||tail->scope!=scope)return;
 	stb* pretail=tail->prev;
 	stb* temp=tail;
 	while(tail!=NULL){
