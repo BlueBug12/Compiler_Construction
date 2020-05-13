@@ -171,7 +171,7 @@ B2
 ;
 B3
 	:B3 Add_op B4{
-		if($1!=$3)
+		if(strcmp($1,$3))
 			$$="float32";//conversion
 		else
 			$$=$1;
@@ -180,7 +180,7 @@ B3
 ;
 B4
 	:B4 Mul_op UnaryExpr{	
-		if($1!=$3)
+		if(strcmp($1,$3))
 			$$="float32";//conversion
 		else
 			$$=$1;
@@ -306,11 +306,11 @@ AssignmentStmt
 
 Assign_op
     : ASSIGN {stack(&stack_top,"ASSIGN");}
-    | ADD_ASSIGN 
-    | SUB_ASSIGN 
-    | MUL_ASSIGN
-    | QUO_ASSIGN
-    | REM_ASSIGN
+    | ADD_ASSIGN {stack(&stack_top,"ADD_ASSIGN");}
+    | SUB_ASSIGN {stack(&stack_top,"SUB_ASSIGN");}
+    | MUL_ASSIGN {stack(&stack_top,"MUL_ASSIGN");}
+    | QUO_ASSIGN {stack(&stack_top,"QUO_ASSIGN");}
+    | REM_ASSIGN {stack(&stack_top,"REM_ASSIGN");}
 ;
 
 /*Expression statements*/
@@ -408,7 +408,7 @@ int precedence(char* op,bool in_stack){
 		return 6;
 	else if(!strcmp(op,"LOR"))
 		return 7;
-	else if(!strcmp(op,"ASSIGN"))
+	else if(!strcmp(op,"ASSIGN")||!strcmp(op,"ADD_ASSIGN")||!strcmp(op,"SUB_ASSIGN")||!strcmp(op,"MUL_ASSIGN")||!strcmp(op,"QUO_ASSIGN")||!strcmp(op,"REM_ASSIGN"))
 		return 8;
 	else if(!strcmp(op,"(")||!strcmp(op,"[")||!strcmp(op,"{"))
 		return 9;
@@ -530,16 +530,17 @@ char* find_type(char* id){
 		return "unknown";
 	}
 	else{
-		char* t;
+		//char* t;
 		if(!strcmp(temp->type,"array")){
-			t=malloc(sizeof(temp->element_type));
-			strcpy(t,temp->element_type);
+			//t=malloc(sizeof(temp->element_type));
+			strcpy(_type,temp->element_type);
 		}
-		else{	
-			char* t=malloc(sizeof(temp->type));
-			strcpy(t,temp->type);
+		else{
+			//printf("find type: %s\n",temp->type);	
+			//char* t=malloc(sizeof(temp->type));
+			strcpy(_type,temp->type);
 		}
-		return t;
+		return _type;
 	}
 }
 
