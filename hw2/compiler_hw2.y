@@ -365,12 +365,12 @@ ForStmt
 ;
 
 ForCondition
-    : Condition
+    : Condition{stack(&stack_top,"#");}
     | ForClause
 ;
 
 ForClause
-    : InitStmt SEMICOLON Condition SEMICOLON PosStmt
+    : InitStmt{stack(&stack_top,"#");} SEMICOLON Condition{stack(&stack_top,"#");} SEMICOLON PosStmt{stack(&stack_top,"#");}
 ;
 
 InitStmt
