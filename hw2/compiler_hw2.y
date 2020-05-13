@@ -205,8 +205,8 @@ B4
 	|UnaryExpr{$$=find_type($1);}
 ;
 UnaryExpr 
-    : PrimaryExpr{strcpy($$,$1);} 
-    | Unary_op UnaryExpr{strcpy($$,$2);}
+    : PrimaryExpr{$$=$1;} 
+    | Unary_op UnaryExpr{$$=$2;}
 ;
 /*
 Binary_op
@@ -218,6 +218,7 @@ Binary_op
 ;*/
 LA
 	:LAND{$$="LAND";stack(&stack_top,"LAND");}
+;
 LO
 	:LOR{$$="LOR";stack(&stack_top,"LOR");}
 
@@ -256,7 +257,7 @@ PrimaryExpr
 
 Operand
     : Literal{$$=$1;}
-    | IDENT{lookup_symbol($1,tail);printf("test1\n");$$=find_type($1);printf("test2\n");}
+    | IDENT{lookup_symbol($1,tail);$$=find_type($1);}
 	| LPA  Expression RPA{$$=$2;}
     //| LPAREN{stack(&stack_top,"(");}  Expression{$$=$2;} RPAREN{stack(&stack_top,")");}
 ;
