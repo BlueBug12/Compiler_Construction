@@ -54,6 +54,7 @@
 	void push(char* op,op_stack**top);
 	char* pop(op_stack** top);	
 	void stack(op_stack** top,char* op);
+	void pop_till_target(op_stack** top,char* target);
 	char* find_type(char* id);
 	/*initialize the head of symbol table*/
 	//stb* head = NULL;
@@ -159,12 +160,33 @@ Expression
 ;*/
 
 Expression 
-    : Expression LO B1{$$="bool";}//error detect
+    : Expression LO B1{
+
+		pop_till_target(&stack_top,"LOR");	
+		if(!strcmp($1,"float32")||!strcmp($3,"float32")){	
+			printf("error:%d: invalid operation: (operator LOR not defined on float32)\n",yylineno);
+		}
+		else if(!strcmp($1,"int32")||!strcmp($3,"int32")){		
+			printf("error:%d: invalid operation: (operator LOR not defined on int32)\n",yylineno);
+		}
+		$$="bool";		
+	}
 	| B1{$$=$1;}
 ;
 B1
 	:B1 LA B2{
-		if(strcmp($1,$3)){	
+
+		//pop_till_target(&stack_top,$2);	
+		//pop_till_target(&stack_top,"LORAND");	
+		if(!strcmp($1,"float32")||!strcmp($3,"float32")){	
+			printf("error:%d: invalid operation: (operator LAND not defined on float32)\n",yylineno);
+		}
+		else if(!strcmp($1,"int32")||!strcmp($3,"int32")){		
+			printf("error:%d: invalid operation: (operator LAND not defined on int32)\n",yylineno);
+		}
+		
+		
+		else if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
 		$$="bool";
@@ -173,6 +195,7 @@ B1
 ;
 B2
 	:B2 Cmp_op B3{
+		//pop_till_target(&stack_top,$2);	
 		if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
@@ -182,12 +205,13 @@ B2
 ;
 B3
 	:B3 Add_op B4{
+		pop_till_target(&stack_top,$2);	
+		
 		if(strcmp($1,$3)){
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 			$$="float32";//conversion
 		}
 		else{
-			//printf("match?? %s %s\n",$1,$3);
 			$$=$1;
 		}
 	}
@@ -195,7 +219,11 @@ B3
 ;
 B4
 	:B4 Mul_op UnaryExpr{	
-		if(strcmp($1,$3)){	
+		pop_till_target(&stack_top,$2);	
+		if(!strcmp($2,"REM")&&(!(strcmp($1,"float32"))||!(strcmp($3,"float32")))){	
+			printf("error:%d: invalid operation: (operator REM not defined on float32)\n",yylineno);
+		}
+		else if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 			$$="float32";//conversion
 		}
@@ -324,7 +352,10 @@ DeclarationAssign
 /*Assignments statements*/
 AssignmentStmt 
     : Expression Assign_op Expression{
-		if(strcmp($1,$3)){
+		if(!strcmp($2,"REM_ASSIGN")&&(!strcmp($1,"float32")||!strcmp($3,"float32"))){	
+			printf("error:%d: invalid operation: (operator REM_ASSIGN not defined on float32)\n",yylineno);
+		}
+		else if(strcmp($1,$3)){
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
 	}
@@ -370,7 +401,12 @@ IfStmt
 ;
 
 Condition
-    : Expression
+    : Expression{
+		stack(&stack_top,"#");
+		if(strcmp($1,"bool")){
+			printf("error:%d: non-bool (type %s) used as for condition\n",yylineno+1,$1);
+		}
+	}
 ;
 
 OptionalIfStmt
@@ -494,6 +530,13 @@ char* pop(op_stack** top){
 		return 0;
 	}
 }
+void pop_till_target(op_stack** top,char* target){
+		while((*top)!=NULL&&(strcmp((*top)->op,target)&&precedence((*top)->op,1)<9)){	
+			char* token=pop(top);
+			printf("%s\n",token);
+			free(token);
+		}
+	}
 void stack(op_stack** top,char* op){
 	if(!strcmp("(",op)||!strcmp("[",op)||!strcmp("{",op))
 		push(op,top);
@@ -508,7 +551,7 @@ void stack(op_stack** top,char* op){
 		free(pop(top));
 	}
 	else if(!strcmp("]",op)){	
-		while(strcmp((*top)->op,"[")){
+		while((*top)!=NULL&&strcmp((*top)->op,"[")){
 			char* token=pop(top);
 			printf("%s\n",token);
 			free(token);
