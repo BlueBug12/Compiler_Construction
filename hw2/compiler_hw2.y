@@ -3,6 +3,7 @@
     #include <stdio.h>	
     #include <stdbool.h>
     #include <string.h>
+	#include <ctype.h>
     #include "common.h" //Extern variables that communicate with lex
     // #define YYDEBUG 1
     // int yydebug = 1;
@@ -259,7 +260,7 @@ IndexExpr
 
 /*Coversion (type casting)*/
 ConversionExpr
-     : Type LPAREN Expression RPAREN{$$=$1;}
+     : Type LPAREN Expression RPAREN{$$=$1;printf("%c to %c\n",toupper($3[0]),toupper($1[0]));}
 ;
 
 /*Statements*/
@@ -521,6 +522,8 @@ void stack(op_stack** top,char* op){
 }
 
 char* find_type(char* id){
+	if(!strcmp(id,"int32")||!strcmp(id,"float32")||!strcmp(id,"string")||!strcmp(id,"bool"))
+		return id;
 	stb* temp= tail;
 	while(temp!=NULL&&strcmp(temp->name,id)){
 		temp=temp->child;
