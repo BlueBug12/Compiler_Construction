@@ -58,7 +58,7 @@
 	stb* tail = NULL;
 	
 	op_stack* stack_top=NULL;
-	char _type [7];
+	char _type [8];
 	char _var [128];
 	char _etype [7];
 %}
@@ -129,7 +129,12 @@ StatementList
 /*Types*/
 Type 
     : TypeName{$$=$1;}
-    | ArrayType
+    | ArrayType{
+		//$$="array";
+		_type[0]='a';
+		strncpy(_type+1,$1,strlen($1)-1);
+		$$=_type;
+	}
 ;
 
 TypeName 
@@ -246,10 +251,20 @@ DeclarationStmt
     : VAR IDENT Type DeclarationAssign{
 		//printf("test for type %s\n",$3);
 		//printf("test for id %s\n",$2);
+		//strcpy(_type,$3);
 		strcpy(_var,$2);
-		strcpy(_type,$3);
+		//create_symbol(_var,_type,"-");
+
+
+		if($3[0]=='a'){
+			//strncpy(_type,$3,1);
+			create_symbol(_var,"array",_type+1);				
+		}
+		else{
+			strcpy(_type,$3);
+			create_symbol(_var,_type,"-");				
+		}
 		//strcpy(_var)
-		create_symbol(_var,_type,"-");				
 	}
 ;
 
