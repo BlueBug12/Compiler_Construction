@@ -14,6 +14,9 @@
 	
 	static int scope=0;	
     static int address=-1;
+	static int foo=0;
+	static bool var_flag=0;
+	static bool left_value_error=0;
     typedef struct symbol_table stb;
 	typedef struct operator_stack op_stack;
 
@@ -55,7 +58,7 @@
 	char* pop(op_stack** top);	
 	void stack(op_stack** top,char* op);
 	void pop_till_target(op_stack** top,char* target);
-	char* find_type(char* id);
+	char* find_type(char* id,int* line);
 	/*initialize the head of symbol table*/
 	//stb* head = NULL;
 	stb* tail = NULL;
@@ -108,7 +111,7 @@
 /* Nonterminal with return, which need to sepcify type */
 %type <string> Type TypeName ArrayType PrintType Operand /*Binary_op*/
 %type <string> ConversionExpr PrimaryExpr UnaryExpr Literal IndexExpr Expression
-%type <string> B1 B2 B3 B4 Add_op Mul_op Cmp_op Assign_op LA LO
+%type <string> B1 B2 B3 B4 Add_op Mul_op Cmp_op Assign_op LA LO ExpressionVar
 /* Yacc will start at this nonterminal */
 %start Program
 
@@ -163,7 +166,10 @@ Expression
     : Expression LO B1{
 
 		pop_till_target(&stack_top,"LOR");	
-		if(!strcmp($1,"float32")||!strcmp($3,"float32")){	
+		if(!strcmp($1,"unknown")||!strcmp($1,"unknown")){
+			//printf("error:%d: undefined: %s\n",yylineno,id);
+		}
+		else if(!strcmp($1,"float32")||!strcmp($3,"float32")){	
 			printf("error:%d: invalid operation: (operator LOR not defined on float32)\n",yylineno);
 		}
 		else if(!strcmp($1,"int32")||!strcmp($3,"int32")){		
@@ -178,7 +184,10 @@ B1
 
 		//pop_till_target(&stack_top,$2);	
 		//pop_till_target(&stack_top,"LORAND");	
-		if(!strcmp($1,"float32")||!strcmp($3,"float32")){	
+		if(!strcmp($1,"unknown")||!strcmp($3,"unknown")){
+			//printf("error:%d: undefined: %s\n",yylineno,id);
+		}
+		else if(!strcmp($1,"float32")||!strcmp($3,"float32")){	
 			printf("error:%d: invalid operation: (operator LAND not defined on float32)\n",yylineno);
 		}
 		else if(!strcmp($1,"int32")||!strcmp($3,"int32")){		
@@ -196,7 +205,10 @@ B1
 B2
 	:B2 Cmp_op B3{
 		//pop_till_target(&stack_top,$2);	
-		if(strcmp($1,$3)){	
+		if(!strcmp($1,"unknown")||!strcmp($3,"unknown")){
+			//printf("error:%d: undefined: %s\n",yylineno,id);
+		}
+		else if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
 		$$="bool";
@@ -205,9 +217,11 @@ B2
 ;
 B3
 	:B3 Add_op B4{
-		pop_till_target(&stack_top,$2);	
-		
-		if(strcmp($1,$3)){
+		pop_till_target(&stack_top,$2);		
+		if(!strcmp($1,"unknown")||!strcmp($3,"unknown")){
+			//printf("error:%d: undefined: %s\n",yylineno,id);
+		}
+		else if(strcmp($1,$3)){
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 			$$="float32";//conversion
 		}
@@ -220,7 +234,11 @@ B3
 B4
 	:B4 Mul_op UnaryExpr{	
 		pop_till_target(&stack_top,$2);	
-		if(!strcmp($2,"REM")&&(!(strcmp($1,"float32"))||!(strcmp($3,"float32")))){	
+
+		if(!strcmp($1,"unknown")||!strcmp($3,"unknown")){
+			//printf("error:%d: undefined: %s\n",yylineno,id);
+		}
+		else if(!strcmp($2,"REM")&&(!(strcmp($1,"float32"))||!(strcmp($3,"float32")))){	
 			printf("error:%d: invalid operation: (operator REM not defined on float32)\n",yylineno);
 		}
 		else if(strcmp($1,$3)){	
@@ -230,7 +248,7 @@ B4
 		else
 			$$=$1;
 	}
-	|UnaryExpr{$$=find_type($1);}
+	|UnaryExpr{$$=find_type($1,&foo);}
 ;
 UnaryExpr 
     : PrimaryExpr{$$=$1;} 
@@ -285,7 +303,7 @@ PrimaryExpr
 
 Operand
     : Literal{$$=$1;}
-    | IDENT{lookup_symbol($1,tail);$$=find_type($1);}
+    | IDENT{lookup_symbol($1,tail);$$=find_type($1,&foo);var_flag=1;}
 	| LPA  Expression RPA{$$=$2;}
     //| LPAREN{stack(&stack_top,"(");}  Expression{$$=$2;} RPAREN{stack(&stack_top,")");}
 ;
@@ -324,7 +342,7 @@ Statement
 ;
 
 SimpleStmt
-    : AssignmentStmt
+    : AssignmentStmt{var_flag=0;}
     | Expression
     | IncDecStmt
 ;
@@ -351,16 +369,34 @@ DeclarationAssign
 
 /*Assignments statements*/
 AssignmentStmt 
-    : Expression Assign_op Expression{
-		if(!strcmp($2,"REM_ASSIGN")&&(!strcmp($1,"float32")||!strcmp($3,"float32"))){	
+    : ExpressionVar Assign_op Expression{	
+		if(!strcmp($1,"unknown")||!strcmp($1,"unknown")){
+			//printf("error:%d: undefined: %s\n",yylineno,id);
+		}
+		else if(!strcmp($2,"REM_ASSIGN")&&(!strcmp($1,"float32")||!strcmp($3,"float32"))){	
 			printf("error:%d: invalid operation: (operator REM_ASSIGN not defined on float32)\n",yylineno);
 		}
 		else if(strcmp($1,$3)){
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
+		else if(left_value_error){
+
+			printf("error:%d: cannot assign to %s\n",yylineno,$1);
+			left_value_error=0;
+		}
 	}
 ;
 
+ExpressionVar
+	: Expression{
+		if(!var_flag){
+			
+			left_value_error=1;
+			var_flag=0;
+		}
+		$$=$1;
+	}
+;
 Assign_op
     : ASSIGN {stack(&stack_top,"ASSIGN");$$="ASSIGN";}
     | ADD_ASSIGN {stack(&stack_top,"ADD_ASSIGN");$$="ADD_ASSIGN";}
@@ -589,7 +625,7 @@ void stack(op_stack** top,char* op){
 	}
 }
 
-char* find_type(char* id){
+char* find_type(char* id,int* line){
 	if(!strcmp(id,"int32")||!strcmp(id,"float32")||!strcmp(id,"string")||!strcmp(id,"bool"))
 		return id;
 	stb* temp= tail;
@@ -610,6 +646,7 @@ char* find_type(char* id){
 			t=malloc(sizeof(*(temp->type)));
 			strcpy(t,temp->type);
 		}
+		*line=temp->lineno;
 		return t;
 	}
 }
@@ -646,6 +683,11 @@ static void create_symbol(char* id, char* type, char* etype){
 		insert_symbol(n);
 	}
 	else{
+		int* pre_line=malloc(sizeof(int));
+		if(strcmp(find_type(id,pre_line),"unknown")){
+			printf("error:%d: %s redeclared in this block. previous declaration at line %d\n",yylineno,id,*pre_line);
+			return;	
+		}
 		stb* n=new_stb_node(tail->last_child->index+1,id,type,etype,NULL,NULL,NULL);
 		tail->last_child->child=n;
 		tail->last_child=n;
@@ -667,7 +709,7 @@ static void lookup_symbol(char* id, stb* n) {
 		else
 			n=n->child;
 	}
-	printf("Can't find the target ID!\n");
+	printf("error:%d: undefined: %s\n",yylineno+1,id);
 	return ;
 }
 
