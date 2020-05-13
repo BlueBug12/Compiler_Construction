@@ -105,9 +105,9 @@
 %token <string> STRING_LIT
 %token <b_val> BOOL_LIT
 /* Nonterminal with return, which need to sepcify type */
-%type <string> Type TypeName ArrayType PrintType Operand Binary_op
+%type <string> Type TypeName ArrayType PrintType Operand /*Binary_op*/
 %type <string> ConversionExpr PrimaryExpr UnaryExpr Literal IndexExpr Expression
-%type <string> B1 B2 B3 B4
+%type <string> B1 B2 B3 B4 Add_op Mul_op Cmp_op Assign_op LA LO
 /* Yacc will start at this nonterminal */
 %start Program
 
@@ -163,34 +163,50 @@ Expression
 	| B1{$$=$1;}
 ;
 B1
-	:B1 LOR{stack(&stack_top,"LOR");} B2{$$="bool";}
+	:B1 LO B2{
+		if(strcmp($1,$3)){	
+			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
+		}
+		$$="bool";
+	}
 	|B2{$$=$1;}
 ;
 B2
-	:B2 LAND{stack(&stack_top,"LAND");} B3{$$="bool";}
+	:B2 LA B3{
+		if(strcmp($1,$3)){	
+			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
+		}
+		$$="bool";
+	}
 	|B3{$$=$1;}
 ;
 B3
 	:B3 Add_op B4{
-		if(strcmp($1,$3))
+		if(strcmp($1,$3)){
+			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 			$$="float32";//conversion
-		else
+		}
+		else{
+			//printf("match?? %s %s\n",$1,$3);
 			$$=$1;
+		}
 	}
 	|B4{$$=$1;}
 ;
 B4
 	:B4 Mul_op UnaryExpr{	
-		if(strcmp($1,$3))
+		if(strcmp($1,$3)){	
+			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 			$$="float32";//conversion
+		}
 		else
 			$$=$1;
 	}
 	|UnaryExpr{$$=find_type($1);}
 ;
 UnaryExpr 
-    : PrimaryExpr{$$=$1;} 
-    | Unary_op UnaryExpr{$$=$2;}
+    : PrimaryExpr{strcpy($$,$1);} 
+    | Unary_op UnaryExpr{strcpy($$,$2);}
 ;
 /*
 Binary_op
@@ -200,6 +216,10 @@ Binary_op
     | Add_op{$$="unknown";}
     | Mul_op{$$="unknown";}
 ;*/
+LA
+	:LAND{$$="LAND";stack(&stack_top,"LAND");}
+LO
+	:LOR{$$="LOR";stack(&stack_top,"LOR");}
 
 Cmp_op 
     : EQL{stack(&stack_top,"EQL");} 
@@ -211,14 +231,14 @@ Cmp_op
 ;
 
 Add_op 
-    : ADD{stack(&stack_top,"ADD");}
-    | SUB{stack(&stack_top,"SUB");}
+    : ADD{stack(&stack_top,"ADD");$$="ADD";}
+    | SUB{stack(&stack_top,"SUB");$$="SUB";}
 ;
 
 Mul_op 
-    : MUL{stack(&stack_top,"MUL");}
-    | QUO{stack(&stack_top,"QUO");}
-    | REM{stack(&stack_top,"REM");}
+    : MUL{stack(&stack_top,"MUL");$$="MUL";}
+    | QUO{stack(&stack_top,"QUO");$$="QUO";}
+    | REM{stack(&stack_top,"REM");$$="REM";}
 ;
 
 Unary_op 
@@ -236,7 +256,7 @@ PrimaryExpr
 
 Operand
     : Literal{$$=$1;}
-    | IDENT{lookup_symbol($1,tail);$$=$1;}
+    | IDENT{lookup_symbol($1,tail);printf("test1\n");$$=find_type($1);printf("test2\n");}
 	| LPA  Expression RPA{$$=$2;}
     //| LPAREN{stack(&stack_top,"(");}  Expression{$$=$2;} RPAREN{stack(&stack_top,")");}
 ;
@@ -302,16 +322,20 @@ DeclarationAssign
 
 /*Assignments statements*/
 AssignmentStmt 
-    : Expression Assign_op Expression
+    : Expression Assign_op Expression{
+		if($1!=$3){
+			printf("error:%d: invalid operation: %s (mismatched types %s and %s)",yylineno,$2,$1,$3);
+		}
+	}
 ;
 
 Assign_op
-    : ASSIGN {stack(&stack_top,"ASSIGN");}
-    | ADD_ASSIGN {stack(&stack_top,"ADD_ASSIGN");}
-    | SUB_ASSIGN {stack(&stack_top,"SUB_ASSIGN");}
-    | MUL_ASSIGN {stack(&stack_top,"MUL_ASSIGN");}
-    | QUO_ASSIGN {stack(&stack_top,"QUO_ASSIGN");}
-    | REM_ASSIGN {stack(&stack_top,"REM_ASSIGN");}
+    : ASSIGN {stack(&stack_top,"ASSIGN");$$="ASSIGN";}
+    | ADD_ASSIGN {stack(&stack_top,"ADD_ASSIGN");$$="ADD_ASSIGN";}
+    | SUB_ASSIGN {stack(&stack_top,"SUB_ASSIGN");$$="SUB_ASSIGN";}
+    | MUL_ASSIGN {stack(&stack_top,"MUL_ASSIGN");$$="MUL_ASSIGN";}
+    | QUO_ASSIGN {stack(&stack_top,"QUO_ASSIGN");$$="QUO_ASSIGN";}
+    | REM_ASSIGN {stack(&stack_top,"REM_ASSIGN");$$="REM_ASSIGN";}
 ;
 
 /*Expression statements*/
@@ -533,17 +557,16 @@ char* find_type(char* id){
 		return "unknown";
 	}
 	else{
-		//char* t;
+		char* t;
 		if(!strcmp(temp->type,"array")){
-			//t=malloc(sizeof(temp->element_type));
-			strcpy(_type,temp->element_type);
+			t=malloc(sizeof(*(temp->element_type)));
+			strcpy(t,temp->element_type);
 		}
 		else{
-			//printf("find type: %s\n",temp->type);	
-			//char* t=malloc(sizeof(temp->type));
-			strcpy(_type,temp->type);
+			t=malloc(sizeof(*(temp->type)));
+			strcpy(t,temp->type);
 		}
-		return _type;
+		return t;
 	}
 }
 
