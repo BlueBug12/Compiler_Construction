@@ -60,7 +60,6 @@
 	void pop_till_target(op_stack** top,char* target);
 	char* find_type(char* id,int* line);
 	/*initialize the head of symbol table*/
-	//stb* head = NULL;
 	stb* tail = NULL;
 	
 	op_stack* stack_top=NULL;
@@ -406,11 +405,6 @@ Assign_op
     | REM_ASSIGN {stack(&stack_top,"REM_ASSIGN");$$="REM_ASSIGN";}
 ;
 
-/*Expression statements*/
-ExpressionStmt
-    : Expression
-;
-
 /*IncDec statements*/
 IncDecStmt
     : Expression IncDec
@@ -426,10 +420,10 @@ Block
     : LBRACE{++scope;} StatementList{dump_symbol(tail);} RBRACE{--scope;}
 ;
 
-StatementList
-    :  StatementList Statement 
-    |/*empty*/  
-;
+//StatementList
+  //  :  StatementList Statement 
+    //|/*empty*/  
+//;
 
 /*If statements*/
 IfStmt
@@ -659,12 +653,6 @@ int main(int argc, char *argv[])
         yyin = stdin;
     }
 	
-	//head = new_stb_node(0,"","","",NULL,NULL,NULL,head);
-	//tail = head;
-
-	//stack_top = malloc(sizeof(op_stack));
-	//stack_top =NULL;
-	//push("#",&stack_top);
 
     yylineno = 0;
     yyparse();
