@@ -69,7 +69,7 @@
 %}
 
 %error-verbose
-
+//%define parse.error verbose
 /* Use variable or self-defined structure to represent
  * nonterminal and token type
  */
@@ -111,6 +111,7 @@
 %type <string> Type TypeName ArrayType PrintType Operand /*Binary_op*/
 %type <string> ConversionExpr PrimaryExpr UnaryExpr Literal IndexExpr Expression
 %type <string> B1 B2 B3 B4 Add_op Mul_op Cmp_op Assign_op LA LO ExpressionVar
+
 /* Yacc will start at this nonterminal */
 %start Program
 
@@ -363,7 +364,7 @@ DeclarationStmt
 
 DeclarationAssign
     : ASSIGN Expression
-    | /*empty*/
+    |
 ;
 
 /*Assignments statements*/
@@ -425,9 +426,11 @@ Block
     //|/*empty*/  
 //;
 
-/*If statements*/
+/*If statements* {stack(&stack_top,"#");}*/
 IfStmt
-    : IF Condition{stack(&stack_top,"#");} Block ElseIfStmt
+    : IF Condition Block
+	| IF Condition Block ELSE IfStmt
+	| IF Condition Block ELSE Block
 ;
 
 Condition
@@ -437,16 +440,6 @@ Condition
 			printf("error:%d: non-bool (type %s) used as for condition\n",yylineno+1,$1);
 		}
 	}
-;
-
-OptionalIfStmt
-    : IfStmt
-    | Block
-;
-
-ElseIfStmt
-    : ElseIfStmt ELSE OptionalIfStmt
-    |/*empty*/
 ;
 
 
