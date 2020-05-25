@@ -18,7 +18,6 @@
 	static bool var_flag=0;
 	static bool left_value_error=0;
     typedef struct symbol_table stb;
-	typedef struct operator_stack op_stack;
 
     struct symbol_table{
 		int index;
@@ -34,12 +33,6 @@
 		stb* last_child;
     };
 
-	struct operator_stack{
-		char* op;
-		op_stack* prev;
-		op_stack* next;
-	};
-
     void yyerror (char const *s)
     {
         printf("error:%d: %s\n", yylineno, s);
@@ -53,16 +46,11 @@
 	
 	stb* new_stb_node(int index,char* name, char* type,
 						char* element_type,stb* prev,stb*child,stb* last_child);
-	int precedence(char* op,bool in_stack);
-	void push(char* op,op_stack**top);
-	char* pop(op_stack** top);	
-	void stack(op_stack** top,char* op);
-	void pop_till_target(op_stack** top,char* target);
+
 	char* find_type(char* id,int* line);
 	/*initialize the head of symbol table*/
 	stb* tail = NULL;
 	
-	op_stack* stack_top=NULL;
 	char _type [9];
 	char _var [128];
 	char _etype [7];
@@ -89,7 +77,7 @@
 %token NEWLINE
 
 /*Arithmetic, relational, and logical operator*/
-%token ADD SUB MUL QUO MOD INC DEC REM POS NEG//arithmetric
+%token ADD SUB MUL QUO MOD INC DEC REM //arithmetric
 %token LSS GTR LEQ GEQ EQL NEQ //relational
 %token ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN QUO_ASSIGN REM_ASSIGN //assignment
 %token LAND LOR NOT TRUE FALSE//logical
@@ -110,8 +98,10 @@
 /* Nonterminal with return, which need to sepcify type */
 %type <string> Type TypeName ArrayType PrintType Operand /*Binary_op*/
 %type <string> ConversionExpr PrimaryExpr UnaryExpr Literal IndexExpr Expression
-%type <string> B1 B2 B3 B4 Add_op Mul_op Cmp_op Assign_op LA LO ExpressionVar
+%type <string> B1 B2 B3 B4 Add_op Mul_op Cmp_op Unary_op Assign_op LA LO ExpressionVar
 
+%left ADD SUB
+%left MUL QUO
 /* Yacc will start at this nonterminal */
 %start Program
 
@@ -131,12 +121,8 @@ StatementList
 Type 
     : TypeName{$$=$1;}
     | ArrayType{
-		//$$="array";
 		_type[0]='a';
-		//printf("test  %d cececcec\n",strlen($1));
-//		strcpy(_etype,$1);
 		strncpy(_type+1,$1,strlen($1));
-		//printf("test    %s!!!!!!!!11\n",_type);
 		$$=_type;
 	}
 ;
@@ -151,21 +137,13 @@ TypeName
 ArrayType 
     :  LBRACK  Expression RBRACK Type{$$=$4;}
 ;
-LBR
-	:LBRACK{stack(&stack_top,"[");}
-RBR
-	:RBRACK{stack(&stack_top,"]");}
 /*Expressions*/
-/*
-Expression 
-    : UnaryExpr {$$=$1;}
-    | Expression Binary_op Expression{$$=$2;}//error detect
-;*/
+
 
 Expression 
     : Expression LO B1{
 
-		pop_till_target(&stack_top,"LOR");	
+
 		if(!strcmp($1,"unknown")||!strcmp($1,"unknown")){
 			//printf("error:%d: undefined: %s\n",yylineno,id);
 		}
@@ -175,15 +153,17 @@ Expression
 		else if(!strcmp($1,"int32")||!strcmp($3,"int32")){		
 			printf("error:%d: invalid operation: (operator LOR not defined on int32)\n",yylineno);
 		}
-		$$="bool";		
+		else{
+			printf("%s\n",$2);
+			$$="bool";
+		}	
 	}
 	| B1{$$=$1;}
 ;
 B1
 	:B1 LA B2{
 
-		//pop_till_target(&stack_top,$2);	
-		//pop_till_target(&stack_top,"LORAND");	
+
 		if(!strcmp($1,"unknown")||!strcmp($3,"unknown")){
 			//printf("error:%d: undefined: %s\n",yylineno,id);
 		}
@@ -198,18 +178,25 @@ B1
 		else if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
-		$$="bool";
+		else{
+			printf("%s\n",$2);
+			$$="bool";
+		}
 	}
 	|B2{$$=$1;}
 ;
 B2
 	:B2 Cmp_op B3{
-		//pop_till_target(&stack_top,$2);	
+
 		if(!strcmp($1,"unknown")||!strcmp($3,"unknown")){
 			//printf("error:%d: undefined: %s\n",yylineno,id);
 		}
 		else if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
+		}
+		else{
+			printf("%s\n",$2);
+			$$="bool";
 		}
 		$$="bool";
 	}
@@ -217,7 +204,7 @@ B2
 ;
 B3
 	:B3 Add_op B4{
-		pop_till_target(&stack_top,$2);		
+
 		if(!strcmp($1,"unknown")||!strcmp($3,"unknown")){
 			//printf("error:%d: undefined: %s\n",yylineno,id);
 		}
@@ -226,6 +213,7 @@ B3
 			$$="float32";//conversion
 		}
 		else{
+			printf("%s\n",$2);
 			$$=$1;
 		}
 	}
@@ -233,7 +221,7 @@ B3
 ;
 B4
 	:B4 Mul_op UnaryExpr{	
-		pop_till_target(&stack_top,$2);	
+
 
 		if(!strcmp($1,"unknown")||!strcmp($3,"unknown")){
 			//printf("error:%d: undefined: %s\n",yylineno,id);
@@ -245,53 +233,48 @@ B4
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 			$$="float32";//conversion
 		}
-		else
+		else{
+			printf("%s\n",$2);
 			$$=$1;
+		}
 	}
 	|UnaryExpr{$$=find_type($1,&foo);}
 ;
 UnaryExpr 
     : PrimaryExpr{$$=$1;} 
-    | Unary_op UnaryExpr{$$=$2;}
+    | Unary_op UnaryExpr{$$=$2;printf("%s\n",$1);}
 ;
-/*
-Binary_op
-    : LOR{stack(&stack_top,"LOR");$$="bool";} 
-    | LAND{stack(&stack_top,"LAND");$$="bool";}
-    | Cmp_op{$$="bool";} 
-    | Add_op{$$="unknown";}
-    | Mul_op{$$="unknown";}
-;*/
+
 LA
-	:LAND{$$="LAND";stack(&stack_top,"LAND");}
+	:LAND{$$="LAND";}
 ;
 LO
-	:LOR{$$="LOR";stack(&stack_top,"LOR");}
+	:LOR{$$="LOR";}
 
 Cmp_op 
-    : EQL{stack(&stack_top,"EQL");} 
-    | NEQ{stack(&stack_top,"NEQ");}
-    | LSS{stack(&stack_top,"LSS");}
-    | LEQ{stack(&stack_top,"LEQ");}
-    | GTR{stack(&stack_top,"GTR");}
-    | GEQ{stack(&stack_top,"GEQ");}
+    : EQL{$$="EQL";} 
+    | NEQ{$$="NEQ";}
+	| LSS{$$="LSS";}               
+    | LEQ{$$="LEQ";}               
+    | GTR{$$="GTR";}               
+    | GEQ{$$="GEQ";}
 ;
 
 Add_op 
-    : ADD{stack(&stack_top,"ADD");$$="ADD";}
-    | SUB{stack(&stack_top,"SUB");$$="SUB";}
+    : ADD{$$="ADD";}
+	| SUB{$$="SUB";}
 ;
 
 Mul_op 
-    : MUL{stack(&stack_top,"MUL");$$="MUL";}
-    | QUO{stack(&stack_top,"QUO");$$="QUO";}
-    | REM{stack(&stack_top,"REM");$$="REM";}
+    : MUL{$$="MUL";}
+    | QUO{$$="QUO";}
+    | REM{$$="REM";}
 ;
 
 Unary_op 
-    : ADD{stack(&stack_top,"POS");}
-    | SUB{stack(&stack_top,"NEG");}
-    | NOT{stack(&stack_top,"NOT");}
+    : ADD{$$="POS";}
+    | SUB{$$="NEG";}
+    | NOT{$$="NOT";}
 ;
 
 /*Primary expression*/
@@ -304,13 +287,9 @@ PrimaryExpr
 Operand
     : Literal{$$=$1;}
     | IDENT{lookup_symbol($1,tail);$$=find_type($1,&foo);var_flag=1;}
-	| LPA  Expression RPA{$$=$2;}
-    //| LPAREN{stack(&stack_top,"(");}  Expression{$$=$2;} RPAREN{stack(&stack_top,")");}
+	| LPAREN  Expression RPAREN{$$=$2;}
 ;
-LPA
-	:LPAREN{stack(&stack_top,"(");}
-RPA
-	:RPAREN{stack(&stack_top,")");}
+
 Literal
     : INT_LIT{printf("INT_LIT %d\n",$1);$$="int32";}
     | FLOAT_LIT{printf("FLOAT_LIT %f\n",$1);$$="float32";}
@@ -322,7 +301,7 @@ Literal
 
 /*Index expression*/
 IndexExpr
-    : PrimaryExpr LBR Expression RBR{$$=$1;}//need to be checked
+    : PrimaryExpr LBRACK Expression RBRACK{$$=$1;}//need to be checked
 ;
 
 /*Coversion (type casting)*/
@@ -332,8 +311,8 @@ ConversionExpr
 
 /*Statements*/
 Statement
-    : DeclarationStmt NEWLINE{stack(&stack_top,"#");}
-    | SimpleStmt NEWLINE{stack(&stack_top,"#");}
+    : DeclarationStmt NEWLINE
+    | SimpleStmt NEWLINE
     | Block NEWLINE
     | IfStmt NEWLINE
     | ForStmt NEWLINE
@@ -398,12 +377,12 @@ ExpressionVar
 	}
 ;
 Assign_op
-    : ASSIGN {stack(&stack_top,"ASSIGN");$$="ASSIGN";}
-    | ADD_ASSIGN {stack(&stack_top,"ADD_ASSIGN");$$="ADD_ASSIGN";}
-    | SUB_ASSIGN {stack(&stack_top,"SUB_ASSIGN");$$="SUB_ASSIGN";}
-    | MUL_ASSIGN {stack(&stack_top,"MUL_ASSIGN");$$="MUL_ASSIGN";}
-    | QUO_ASSIGN {stack(&stack_top,"QUO_ASSIGN");$$="QUO_ASSIGN";}
-    | REM_ASSIGN {stack(&stack_top,"REM_ASSIGN");$$="REM_ASSIGN";}
+    : ASSIGN {$$="ASSIGN";}
+    | ADD_ASSIGN {$$="ADD_ASSIGN";}
+    | SUB_ASSIGN {$$="SUB_ASSIGN";}
+    | MUL_ASSIGN {$$="MUL_ASSIGN";}
+    | QUO_ASSIGN {$$="QUO_ASSIGN";}
+    | REM_ASSIGN {$$="REM_ASSIGN";}
 ;
 
 /*IncDec statements*/
@@ -421,10 +400,6 @@ Block
     : LBRACE{++scope;} StatementList{dump_symbol(tail);} RBRACE{--scope;}
 ;
 
-//StatementList
-  //  :  StatementList Statement 
-    //|/*empty*/  
-//;
 
 /*If statements* {stack(&stack_top,"#");}*/
 IfStmt
@@ -435,7 +410,6 @@ IfStmt
 
 Condition
     : Expression{
-		stack(&stack_top,"#");
 		if(strcmp($1,"bool")){
 			printf("error:%d: non-bool (type %s) used as for condition\n",yylineno+1,$1);
 		}
@@ -449,12 +423,12 @@ ForStmt
 ;
 
 ForCondition
-    : Condition{stack(&stack_top,"#");}
+    : Condition
     | ForClause
 ;
 
 ForClause
-    : InitStmt{stack(&stack_top,"#");} SEMICOLON Condition{stack(&stack_top,"#");} SEMICOLON PosStmt{stack(&stack_top,"#");}
+    : InitStmt SEMICOLON Condition SEMICOLON PosStmt
 ;
 
 InitStmt
@@ -467,8 +441,8 @@ PosStmt
 
 /*Print statements*/
 PrintStmt
-    : PrintType LPAREN Expression RPAREN{stack(&stack_top,"#");printf("%s %s\n",$1,$3);}
-;
+	: PrintType LPAREN Expression RPAREN{printf("%s %s\n",$1,$3);}
+;   
 
 PrintType
     : PRINT{$$="PRINT";}
@@ -476,32 +450,7 @@ PrintType
 ;
 %%
 /* C code section */
-int precedence(char* op,bool in_stack){
-	if(!strcmp(op,"(")&&in_stack==0)
-		return 0;
-	else if(!strcmp(op,"[")&&in_stack==0)
-		return 1;
-	else if(!strcmp(op,"POS")||!strcmp(op,"NEG")||!strcmp(op,"NOT"))
-		return 2;
-	else if(!strcmp(op,"MUL")||!strcmp(op,"QUO")||!strcmp(op,"REM"))
-		return 3;
-	else if(!strcmp(op,"ADD")||!strcmp(op,"SUB"))
-		return 4;
-	else if(!strcmp(op,"LSS")||!strcmp(op,"GTR")||!strcmp(op,"LEQ")||!strcmp(op,"GEQ")||!strcmp(op,"EQL")||!strcmp(op,"NEQ"))
-		return 5;
-	else if(!strcmp(op,"LAND"))
-		return 6;
-	else if(!strcmp(op,"LOR"))
-		return 7;
-	else if(!strcmp(op,"ASSIGN")||!strcmp(op,"ADD_ASSIGN")||!strcmp(op,"SUB_ASSIGN")||!strcmp(op,"MUL_ASSIGN")||!strcmp(op,"QUO_ASSIGN")||!strcmp(op,"REM_ASSIGN"))
-		return 8;
-	else if(!strcmp(op,"(")||!strcmp(op,"[")||!strcmp(op,"{"))
-		return 9;
-	else{
-		printf("Error: unexpected operator in operator stack!\n");
-		return -1;
-	}
-}
+
 stb* new_stb_node(int index,char* name, char* type,
 						char* element_type,stb* prev,stb*child,stb* last_child){
 	stb* node = malloc(sizeof(stb));
@@ -524,93 +473,6 @@ stb* new_stb_node(int index,char* name, char* type,
 	return node;
 }
 
-void test(op_stack* ptr){
-	printf("stack: ");
-	while(ptr!=NULL){
-		printf("%s ",ptr->op);
-		ptr=ptr->prev;
-	}
-	printf("\n");
-}
-void push(char* op, op_stack** top){
-	op_stack* temp=malloc(sizeof(op_stack));
-	temp->op=malloc(sizeof(op));
-	strcpy(temp->op,op);
-	temp->prev=*top;
-	*top = temp;
-}
-char* pop(op_stack** top){
-	if((*top)!=NULL){
-		char* op=malloc(sizeof((*top)->op));
-		strcpy(op,(*top)->op);
-		op_stack* temp = (*top)->prev;
-		free(*top);
-		*top = temp;; 
-		return op;
-	}
-	else{
-		printf("Error: pop an empty operator stack!\n");
-		return 0;
-	}
-}
-void pop_till_target(op_stack** top,char* target){
-		while((*top)!=NULL&&(strcmp((*top)->op,target)&&precedence((*top)->op,1)<9)){	
-			char* token=pop(top);
-			printf("%s\n",token);
-			free(token);
-		}
-	}
-void stack(op_stack** top,char* op){
-	if(!strcmp("(",op)||!strcmp("[",op)||!strcmp("{",op))
-		push(op,top);
-	else if(!strcmp(")",op)){
-		while((*top)!=NULL&&strcmp((*top)->op,"(")){
-			char* token=pop(top);
-			printf("%s\n",token);
-			free(token);
-			
-		}
-		if((*top)==NULL){printf("NO match LPARN\n");}
-		free(pop(top));
-	}
-	else if(!strcmp("]",op)){	
-		while((*top)!=NULL&&strcmp((*top)->op,"[")){
-			char* token=pop(top);
-			printf("%s\n",token);
-			free(token);
-		}
-		free(pop(top));
-	}
-	
-	else if(!strcmp("}",op)){	
-		while(strcmp((*top)->op,"{")){
-			char* token=pop(top);
-			printf("%s\n",token);
-			free(token);
-		}
-		free(pop(top));
-	}
-	else if(!strcmp("#",op)){//clean all operator
-		while((*top)!=NULL){	
-			char* token=pop(top);
-			printf("%s\n",token);
-			free(token);
-		}
-	}
-	else if(!strcmp("NOT",op)){push(op,top);}
-	else if((*top)==NULL||precedence(op,0)<precedence((*top)->op,1)){
-		push(op,top);
-	}
-	
-	else{
-		do{	
-			char* token=pop(top);
-			printf("%s\n",token);
-			free(token);
-		}while((*top)!=NULL&&precedence(op,0)>=precedence((*top)->op,1));
-		push(op,top);
-	}
-}
 
 char* find_type(char* id,int* line){
 	if(!strcmp(id,"int32")||!strcmp(id,"float32")||!strcmp(id,"string")||!strcmp(id,"bool"))

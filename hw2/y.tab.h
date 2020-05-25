@@ -67,40 +67,38 @@ extern int yydebug;
     INC = 273,
     DEC = 274,
     REM = 275,
-    POS = 276,
-    NEG = 277,
-    LSS = 278,
-    GTR = 279,
-    LEQ = 280,
-    GEQ = 281,
-    EQL = 282,
-    NEQ = 283,
-    ASSIGN = 284,
-    ADD_ASSIGN = 285,
-    SUB_ASSIGN = 286,
-    MUL_ASSIGN = 287,
-    QUO_ASSIGN = 288,
-    REM_ASSIGN = 289,
-    LAND = 290,
-    LOR = 291,
-    NOT = 292,
-    TRUE = 293,
-    FALSE = 294,
-    IF = 295,
-    ELSE = 296,
-    FOR = 297,
-    VAR = 298,
-    PRINT = 299,
-    PRINTLN = 300,
-    IDENT = 301,
-    INT = 302,
-    FLOAT = 303,
-    BOOL = 304,
-    STRING = 305,
-    INT_LIT = 306,
-    FLOAT_LIT = 307,
-    STRING_LIT = 308,
-    BOOL_LIT = 309
+    LSS = 276,
+    GTR = 277,
+    LEQ = 278,
+    GEQ = 279,
+    EQL = 280,
+    NEQ = 281,
+    ASSIGN = 282,
+    ADD_ASSIGN = 283,
+    SUB_ASSIGN = 284,
+    MUL_ASSIGN = 285,
+    QUO_ASSIGN = 286,
+    REM_ASSIGN = 287,
+    LAND = 288,
+    LOR = 289,
+    NOT = 290,
+    TRUE = 291,
+    FALSE = 292,
+    IF = 293,
+    ELSE = 294,
+    FOR = 295,
+    VAR = 296,
+    PRINT = 297,
+    PRINTLN = 298,
+    IDENT = 299,
+    INT = 300,
+    FLOAT = 301,
+    BOOL = 302,
+    STRING = 303,
+    INT_LIT = 304,
+    FLOAT_LIT = 305,
+    STRING_LIT = 306,
+    BOOL_LIT = 307
   };
 #endif
 /* Tokens.  */
@@ -122,53 +120,51 @@ extern int yydebug;
 #define INC 273
 #define DEC 274
 #define REM 275
-#define POS 276
-#define NEG 277
-#define LSS 278
-#define GTR 279
-#define LEQ 280
-#define GEQ 281
-#define EQL 282
-#define NEQ 283
-#define ASSIGN 284
-#define ADD_ASSIGN 285
-#define SUB_ASSIGN 286
-#define MUL_ASSIGN 287
-#define QUO_ASSIGN 288
-#define REM_ASSIGN 289
-#define LAND 290
-#define LOR 291
-#define NOT 292
-#define TRUE 293
-#define FALSE 294
-#define IF 295
-#define ELSE 296
-#define FOR 297
-#define VAR 298
-#define PRINT 299
-#define PRINTLN 300
-#define IDENT 301
-#define INT 302
-#define FLOAT 303
-#define BOOL 304
-#define STRING 305
-#define INT_LIT 306
-#define FLOAT_LIT 307
-#define STRING_LIT 308
-#define BOOL_LIT 309
+#define LSS 276
+#define GTR 277
+#define LEQ 278
+#define GEQ 279
+#define EQL 280
+#define NEQ 281
+#define ASSIGN 282
+#define ADD_ASSIGN 283
+#define SUB_ASSIGN 284
+#define MUL_ASSIGN 285
+#define QUO_ASSIGN 286
+#define REM_ASSIGN 287
+#define LAND 288
+#define LOR 289
+#define NOT 290
+#define TRUE 291
+#define FALSE 292
+#define IF 293
+#define ELSE 294
+#define FOR 295
+#define VAR 296
+#define PRINT 297
+#define PRINTLN 298
+#define IDENT 299
+#define INT 300
+#define FLOAT 301
+#define BOOL 302
+#define STRING 303
+#define INT_LIT 304
+#define FLOAT_LIT 305
+#define STRING_LIT 306
+#define BOOL_LIT 307
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 76 "compiler_hw2.y"
+#line 64 "compiler_hw2.y"
 
     int i_val;
     float f_val;
     char* string;
     bool b_val;
 
-#line 172 "y.tab.h"
+#line 168 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
