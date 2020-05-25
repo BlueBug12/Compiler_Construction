@@ -57,48 +57,47 @@ extern int yydebug;
     RBRACE = 263,
     SEMICOLON = 264,
     COMMA = 265,
-    QUOTA = 266,
-    NEWLINE = 267,
-    ADD = 268,
-    SUB = 269,
-    MUL = 270,
-    QUO = 271,
-    MOD = 272,
-    INC = 273,
-    DEC = 274,
-    REM = 275,
-    LSS = 276,
-    GTR = 277,
-    LEQ = 278,
-    GEQ = 279,
-    EQL = 280,
-    NEQ = 281,
-    ASSIGN = 282,
-    ADD_ASSIGN = 283,
-    SUB_ASSIGN = 284,
-    MUL_ASSIGN = 285,
-    QUO_ASSIGN = 286,
-    REM_ASSIGN = 287,
-    LAND = 288,
-    LOR = 289,
-    NOT = 290,
-    TRUE = 291,
-    FALSE = 292,
-    IF = 293,
-    ELSE = 294,
-    FOR = 295,
-    VAR = 296,
-    PRINT = 297,
-    PRINTLN = 298,
-    IDENT = 299,
-    INT = 300,
-    FLOAT = 301,
-    BOOL = 302,
-    STRING = 303,
-    INT_LIT = 304,
-    FLOAT_LIT = 305,
-    STRING_LIT = 306,
-    BOOL_LIT = 307
+    NEWLINE = 266,
+    ADD = 267,
+    SUB = 268,
+    MUL = 269,
+    QUO = 270,
+    MOD = 271,
+    INC = 272,
+    DEC = 273,
+    REM = 274,
+    LSS = 275,
+    GTR = 276,
+    LEQ = 277,
+    GEQ = 278,
+    EQL = 279,
+    NEQ = 280,
+    ASSIGN = 281,
+    ADD_ASSIGN = 282,
+    SUB_ASSIGN = 283,
+    MUL_ASSIGN = 284,
+    QUO_ASSIGN = 285,
+    REM_ASSIGN = 286,
+    LAND = 287,
+    LOR = 288,
+    NOT = 289,
+    TRUE = 290,
+    FALSE = 291,
+    IF = 292,
+    ELSE = 293,
+    FOR = 294,
+    VAR = 295,
+    PRINT = 296,
+    PRINTLN = 297,
+    IDENT = 298,
+    INT = 299,
+    FLOAT = 300,
+    BOOL = 301,
+    STRING = 302,
+    INT_LIT = 303,
+    FLOAT_LIT = 304,
+    STRING_LIT = 305,
+    BOOL_LIT = 306
   };
 #endif
 /* Tokens.  */
@@ -110,48 +109,47 @@ extern int yydebug;
 #define RBRACE 263
 #define SEMICOLON 264
 #define COMMA 265
-#define QUOTA 266
-#define NEWLINE 267
-#define ADD 268
-#define SUB 269
-#define MUL 270
-#define QUO 271
-#define MOD 272
-#define INC 273
-#define DEC 274
-#define REM 275
-#define LSS 276
-#define GTR 277
-#define LEQ 278
-#define GEQ 279
-#define EQL 280
-#define NEQ 281
-#define ASSIGN 282
-#define ADD_ASSIGN 283
-#define SUB_ASSIGN 284
-#define MUL_ASSIGN 285
-#define QUO_ASSIGN 286
-#define REM_ASSIGN 287
-#define LAND 288
-#define LOR 289
-#define NOT 290
-#define TRUE 291
-#define FALSE 292
-#define IF 293
-#define ELSE 294
-#define FOR 295
-#define VAR 296
-#define PRINT 297
-#define PRINTLN 298
-#define IDENT 299
-#define INT 300
-#define FLOAT 301
-#define BOOL 302
-#define STRING 303
-#define INT_LIT 304
-#define FLOAT_LIT 305
-#define STRING_LIT 306
-#define BOOL_LIT 307
+#define NEWLINE 266
+#define ADD 267
+#define SUB 268
+#define MUL 269
+#define QUO 270
+#define MOD 271
+#define INC 272
+#define DEC 273
+#define REM 274
+#define LSS 275
+#define GTR 276
+#define LEQ 277
+#define GEQ 278
+#define EQL 279
+#define NEQ 280
+#define ASSIGN 281
+#define ADD_ASSIGN 282
+#define SUB_ASSIGN 283
+#define MUL_ASSIGN 284
+#define QUO_ASSIGN 285
+#define REM_ASSIGN 286
+#define LAND 287
+#define LOR 288
+#define NOT 289
+#define TRUE 290
+#define FALSE 291
+#define IF 292
+#define ELSE 293
+#define FOR 294
+#define VAR 295
+#define PRINT 296
+#define PRINTLN 297
+#define IDENT 298
+#define INT 299
+#define FLOAT 300
+#define BOOL 301
+#define STRING 302
+#define INT_LIT 303
+#define FLOAT_LIT 304
+#define STRING_LIT 305
+#define BOOL_LIT 306
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -164,7 +162,7 @@ union YYSTYPE
     char* string;
     bool b_val;
 
-#line 168 "y.tab.h"
+#line 166 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

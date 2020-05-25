@@ -1,7 +1,6 @@
 Terminals unused in grammar
 
     COMMA
-    QUOTA
     MOD
 
 
@@ -157,181 +156,180 @@ Terminals, with rules where they appear
     RBRACE (263) 79
     SEMICOLON (264) 87
     COMMA (265)
-    QUOTA (266)
-    NEWLINE (267) 53 54 55 56 57 58 59
-    ADD (268) 31 36
-    SUB (269) 32 37
-    MUL (270) 33
-    QUO (271) 34
-    MOD (272)
-    INC (273) 75
-    DEC (274) 76
-    REM (275) 35
-    LSS (276) 27
-    GTR (277) 29
-    LEQ (278) 28
-    GEQ (279) 30
-    EQL (280) 25
-    NEQ (281) 26
-    ASSIGN (282) 64 68
-    ADD_ASSIGN (283) 69
-    SUB_ASSIGN (284) 70
-    MUL_ASSIGN (285) 71
-    QUO_ASSIGN (286) 72
-    REM_ASSIGN (287) 73
-    LAND (288) 23
-    LOR (289) 24
-    NOT (290) 38
-    TRUE (291) 49
-    FALSE (292) 50
-    IF (293) 80 81 82
-    ELSE (294) 81 82
-    FOR (295) 84
-    VAR (296) 63
-    PRINT (297) 91
-    PRINTLN (298) 92
-    IDENT <string> (299) 43 63
-    INT <string> (300) 6
-    FLOAT <string> (301) 7
-    BOOL <string> (302) 9
-    STRING <string> (303) 8
-    INT_LIT <i_val> (304) 45
-    FLOAT_LIT <f_val> (305) 46
-    STRING_LIT <string> (306) 48
-    BOOL_LIT <b_val> (307) 47
+    NEWLINE (266) 53 54 55 56 57 58 59
+    ADD (267) 31 36
+    SUB (268) 32 37
+    MUL (269) 33
+    QUO (270) 34
+    MOD (271)
+    INC (272) 75
+    DEC (273) 76
+    REM (274) 35
+    LSS (275) 27
+    GTR (276) 29
+    LEQ (277) 28
+    GEQ (278) 30
+    EQL (279) 25
+    NEQ (280) 26
+    ASSIGN (281) 64 68
+    ADD_ASSIGN (282) 69
+    SUB_ASSIGN (283) 70
+    MUL_ASSIGN (284) 71
+    QUO_ASSIGN (285) 72
+    REM_ASSIGN (286) 73
+    LAND (287) 23
+    LOR (288) 24
+    NOT (289) 38
+    TRUE (290) 49
+    FALSE (291) 50
+    IF (292) 80 81 82
+    ELSE (293) 81 82
+    FOR (294) 84
+    VAR (295) 63
+    PRINT (296) 91
+    PRINTLN (297) 92
+    IDENT <string> (298) 43 63
+    INT <string> (299) 6
+    FLOAT <string> (300) 7
+    BOOL <string> (301) 9
+    STRING <string> (302) 8
+    INT_LIT <i_val> (303) 45
+    FLOAT_LIT <f_val> (304) 46
+    STRING_LIT <string> (305) 48
+    BOOL_LIT <b_val> (306) 47
 
 
 Nonterminals, with rules where they appear
 
-    $accept (53)
+    $accept (52)
         on left: 0
-    Program (54)
+    Program (53)
         on left: 1
         on right: 0
-    StatementList (55)
+    StatementList (54)
         on left: 2 3
         on right: 1 2 79
-    Type <string> (56)
+    Type <string> (55)
         on left: 4 5
         on right: 10 52 63
-    TypeName <string> (57)
+    TypeName <string> (56)
         on left: 6 7 8 9
         on right: 4
-    ArrayType <string> (58)
+    ArrayType <string> (57)
         on left: 10
         on right: 5
-    Expression <string> (59)
+    Expression <string> (58)
         on left: 11 12
         on right: 10 11 44 51 52 61 64 66 67 74 83 90
-    B1 <string> (60)
+    B1 <string> (59)
         on left: 13 14
         on right: 11 12 13
-    B2 <string> (61)
+    B2 <string> (60)
         on left: 15 16
         on right: 13 14 15
-    B3 <string> (62)
+    B3 <string> (61)
         on left: 17 18
         on right: 15 16 17
-    B4 <string> (63)
+    B4 <string> (62)
         on left: 19 20
         on right: 17 18 19
-    UnaryExpr <string> (64)
+    UnaryExpr <string> (63)
         on left: 21 22
         on right: 19 20 22
-    LA <string> (65)
+    LA <string> (64)
         on left: 23
         on right: 13
-    LO <string> (66)
+    LO <string> (65)
         on left: 24
         on right: 11
-    Cmp_op <string> (67)
+    Cmp_op <string> (66)
         on left: 25 26 27 28 29 30
         on right: 15
-    Add_op <string> (68)
+    Add_op <string> (67)
         on left: 31 32
         on right: 17
-    Mul_op <string> (69)
+    Mul_op <string> (68)
         on left: 33 34 35
         on right: 19
-    Unary_op <string> (70)
+    Unary_op <string> (69)
         on left: 36 37 38
         on right: 22
-    PrimaryExpr <string> (71)
+    PrimaryExpr <string> (70)
         on left: 39 40 41
         on right: 21 51
-    Operand <string> (72)
+    Operand <string> (71)
         on left: 42 43 44
         on right: 39
-    Literal <string> (73)
+    Literal <string> (72)
         on left: 45 46 47 48 49 50
         on right: 42
-    IndexExpr <string> (74)
+    IndexExpr <string> (73)
         on left: 51
         on right: 40
-    ConversionExpr <string> (75)
+    ConversionExpr <string> (74)
         on left: 52
         on right: 41
-    Statement (76)
+    Statement (75)
         on left: 53 54 55 56 57 58 59
         on right: 2 3
-    SimpleStmt (77)
+    SimpleStmt (76)
         on left: 60 61 62
         on right: 54 88 89
-    DeclarationStmt (78)
+    DeclarationStmt (77)
         on left: 63
         on right: 53
-    DeclarationAssign (79)
+    DeclarationAssign (78)
         on left: 64 65
         on right: 63
-    AssignmentStmt (80)
+    AssignmentStmt (79)
         on left: 66
         on right: 60
-    ExpressionVar <string> (81)
+    ExpressionVar <string> (80)
         on left: 67
         on right: 66
-    Assign_op <string> (82)
+    Assign_op <string> (81)
         on left: 68 69 70 71 72 73
         on right: 66
-    IncDecStmt (83)
+    IncDecStmt (82)
         on left: 74
         on right: 62
-    IncDec (84)
+    IncDec (83)
         on left: 75 76
         on right: 74
-    Block (85)
+    Block (84)
         on left: 79
         on right: 55 80 81 82 84
-    $@1 (86)
+    $@1 (85)
         on left: 77
         on right: 79
-    $@2 (87)
+    $@2 (86)
         on left: 78
         on right: 79
-    IfStmt (88)
+    IfStmt (87)
         on left: 80 81 82
         on right: 56 81
-    Condition (89)
+    Condition (88)
         on left: 83
         on right: 80 81 82 85 87
-    ForStmt (90)
+    ForStmt (89)
         on left: 84
         on right: 57
-    ForCondition (91)
+    ForCondition (90)
         on left: 85 86
         on right: 84
-    ForClause (92)
+    ForClause (91)
         on left: 87
         on right: 86
-    InitStmt (93)
+    InitStmt (92)
         on left: 88
         on right: 87
-    PosStmt (94)
+    PosStmt (93)
         on left: 89
         on right: 87
-    PrintStmt (95)
+    PrintStmt (94)
         on left: 90
         on right: 58
-    PrintType <string> (96)
+    PrintType <string> (95)
         on left: 91 92
         on right: 90
 

@@ -73,7 +73,7 @@
 %token LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE //parentheses
 %token SEMICOLON
 %token COMMA
-%token QUOTA
+//%token QUOTA
 %token NEWLINE
 
 /*Arithmetic, relational, and logical operator*/
@@ -153,10 +153,9 @@ Expression
 		else if(!strcmp($1,"int32")||!strcmp($3,"int32")){		
 			printf("error:%d: invalid operation: (operator LOR not defined on int32)\n",yylineno);
 		}
-		else{
-			printf("%s\n",$2);
-			$$="bool";
-		}	
+		
+		$$="bool";	
+		printf("%s\n",$2);
 	}
 	| B1{$$=$1;}
 ;
@@ -178,10 +177,8 @@ B1
 		else if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
-		else{
-			printf("%s\n",$2);
-			$$="bool";
-		}
+		$$="bool";
+		printf("%s\n",$2);
 	}
 	|B2{$$=$1;}
 ;
@@ -194,11 +191,8 @@ B2
 		else if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
-		else{
-			printf("%s\n",$2);
-			$$="bool";
-		}
 		$$="bool";
+		printf("%s\n",$2);
 	}
 	|B3{$$=$1;}
 ;
@@ -212,10 +206,8 @@ B3
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 			$$="float32";//conversion
 		}
-		else{
-			printf("%s\n",$2);
-			$$=$1;
-		}
+		$$=$1;
+		printf("%s\n",$2);
 	}
 	|B4{$$=$1;}
 ;
@@ -233,10 +225,8 @@ B4
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 			$$="float32";//conversion
 		}
-		else{
-			printf("%s\n",$2);
-			$$=$1;
-		}
+		$$=$1;
+		printf("%s\n",$2);
 	}
 	|UnaryExpr{$$=find_type($1,&foo);}
 ;
@@ -363,6 +353,7 @@ AssignmentStmt
 			printf("error:%d: cannot assign to %s\n",yylineno,$1);
 			left_value_error=0;
 		}
+		printf("%s\n",$2);
 	}
 ;
 
