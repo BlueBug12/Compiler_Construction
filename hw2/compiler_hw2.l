@@ -43,8 +43,8 @@ fnumber ({digit}*\.{digit}+)
 "*"         { return MUL; }
 "/"         { return QUO; }
 "%"         { return REM; }
-"++"        {printf("INC\n"); return INC; }
-"--"        {printf("DEC\n"); return DEC; }
+"++"        { return INC; }
+"--"        { return DEC; }
 
 ">"         { return GTR; }
 "<"         { return LSS; }
@@ -72,7 +72,6 @@ fnumber ({digit}*\.{digit}+)
 "}"         { return RBRACE; }
 
 ";"         { return SEMICOLON; }
-","         { return COMMA; }
 "\n"        { return NEWLINE; }
 
 "print"     { return PRINT; }

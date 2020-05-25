@@ -72,12 +72,12 @@
 /*Delimiters*/
 %token LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE //parentheses
 %token SEMICOLON
-%token COMMA
+//%token COMMA
 //%token QUOTA
 %token NEWLINE
 
 /*Arithmetic, relational, and logical operator*/
-%token ADD SUB MUL QUO MOD INC DEC REM //arithmetric
+%token ADD SUB MUL QUO REM INC DEC //arithmetric
 %token LSS GTR LEQ GEQ EQL NEQ //relational
 %token ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN QUO_ASSIGN REM_ASSIGN //assignment
 %token LAND LOR NOT TRUE FALSE//logical
@@ -382,8 +382,8 @@ IncDecStmt
 ;
 
 IncDec
-    : INC
-    | DEC
+    : INC{printf("INC\n");}
+    | DEC{printf("DEC\n");}
 ;
 
 /*Block*/

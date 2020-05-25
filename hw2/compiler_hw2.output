@@ -1,3 +1,15 @@
+Terminals unused in grammar
+
+    COMMA
+    QUOTA
+    MOD
+    POS
+    NEG
+
+
+State 134 conflicts: 1 shift/reduce
+
+
 Grammar
 
     0 $accept: Program $end
@@ -17,313 +29,363 @@ Grammar
 
    10 ArrayType: LBRACK Expression RBRACK Type
 
-   11 Expression: Expression LO B1
-   12           | B1
+   11 LBR: LBRACK
 
-   13 B1: B1 LA B2
-   14   | B2
+   12 RBR: RBRACK
 
-   15 B2: B2 Cmp_op B3
-   16   | B3
+   13 Expression: Expression LO B1
+   14           | B1
 
-   17 B3: B3 Add_op B4
-   18   | B4
+   15 B1: B1 LA B2
+   16   | B2
 
-   19 B4: B4 Mul_op UnaryExpr
-   20   | UnaryExpr
+   17 B2: B2 Cmp_op B3
+   18   | B3
 
-   21 UnaryExpr: PrimaryExpr
-   22          | Unary_op UnaryExpr
+   19 B3: B3 Add_op B4
+   20   | B4
 
-   23 LA: LAND
+   21 B4: B4 Mul_op UnaryExpr
+   22   | UnaryExpr
 
-   24 LO: LOR
+   23 UnaryExpr: PrimaryExpr
+   24          | Unary_op UnaryExpr
 
-   25 Cmp_op: EQL
-   26       | NEQ
-   27       | LSS
-   28       | LEQ
-   29       | GTR
-   30       | GEQ
+   25 LA: LAND
 
-   31 Add_op: ADD
-   32       | SUB
+   26 LO: LOR
 
-   33 Mul_op: MUL
-   34       | QUO
-   35       | REM
+   27 Cmp_op: EQL
+   28       | NEQ
+   29       | LSS
+   30       | LEQ
+   31       | GTR
+   32       | GEQ
 
-   36 Unary_op: ADD
-   37         | SUB
-   38         | NOT
+   33 Add_op: ADD
+   34       | SUB
 
-   39 PrimaryExpr: Operand
-   40            | IndexExpr
-   41            | ConversionExpr
+   35 Mul_op: MUL
+   36       | QUO
+   37       | REM
 
-   42 Operand: Literal
-   43        | IDENT
-   44        | LPAREN Expression RPAREN
+   38 Unary_op: ADD
+   39         | SUB
+   40         | NOT
 
-   45 Literal: INT_LIT
-   46        | FLOAT_LIT
-   47        | BOOL_LIT
-   48        | STRING_LIT
-   49        | TRUE
-   50        | FALSE
+   41 PrimaryExpr: Operand
+   42            | IndexExpr
+   43            | ConversionExpr
 
-   51 IndexExpr: PrimaryExpr LBRACK Expression RBRACK
+   44 Operand: Literal
+   45        | IDENT
+   46        | LPA Expression RPA
 
-   52 ConversionExpr: Type LPAREN Expression RPAREN
+   47 LPA: LPAREN
 
-   53 Statement: DeclarationStmt NEWLINE
-   54          | SimpleStmt NEWLINE
-   55          | Block NEWLINE
-   56          | IfStmt NEWLINE
-   57          | ForStmt NEWLINE
-   58          | PrintStmt NEWLINE
-   59          | NEWLINE
+   48 RPA: RPAREN
 
-   60 SimpleStmt: AssignmentStmt
-   61           | Expression
-   62           | IncDecStmt
+   49 Literal: INT_LIT
+   50        | FLOAT_LIT
+   51        | BOOL_LIT
+   52        | STRING_LIT
+   53        | TRUE
+   54        | FALSE
 
-   63 DeclarationStmt: VAR IDENT Type DeclarationAssign
+   55 IndexExpr: PrimaryExpr LBR Expression RBR
 
-   64 DeclarationAssign: ASSIGN Expression
-   65                  | %empty
+   56 ConversionExpr: Type LPAREN Expression RPAREN
 
-   66 AssignmentStmt: ExpressionVar Assign_op Expression
+   57 Statement: DeclarationStmt NEWLINE
+   58          | SimpleStmt NEWLINE
+   59          | Block NEWLINE
+   60          | IfStmt NEWLINE
+   61          | ForStmt NEWLINE
+   62          | PrintStmt NEWLINE
+   63          | NEWLINE
 
-   67 ExpressionVar: Expression
+   64 SimpleStmt: AssignmentStmt
+   65           | Expression
+   66           | IncDecStmt
 
-   68 Assign_op: ASSIGN
-   69          | ADD_ASSIGN
-   70          | SUB_ASSIGN
-   71          | MUL_ASSIGN
-   72          | QUO_ASSIGN
-   73          | REM_ASSIGN
+   67 DeclarationStmt: VAR IDENT Type DeclarationAssign
 
-   74 IncDecStmt: Expression IncDec
+   68 DeclarationAssign: ASSIGN Expression
+   69                  | %empty
 
-   75 IncDec: INC
-   76       | DEC
+   70 AssignmentStmt: ExpressionVar Assign_op Expression
 
-   77 $@1: %empty
+   71 ExpressionVar: Expression
 
-   78 $@2: %empty
+   72 Assign_op: ASSIGN
+   73          | ADD_ASSIGN
+   74          | SUB_ASSIGN
+   75          | MUL_ASSIGN
+   76          | QUO_ASSIGN
+   77          | REM_ASSIGN
 
-   79 Block: LBRACE $@1 StatementList $@2 RBRACE
+   78 IncDecStmt: Expression IncDec
 
-   80 IfStmt: IF Condition Block
-   81       | IF Condition Block ELSE IfStmt
-   82       | IF Condition Block ELSE Block
+   79 IncDec: INC
+   80       | DEC
 
-   83 Condition: Expression
+   81 $@1: %empty
 
-   84 ForStmt: FOR ForCondition Block
+   82 $@2: %empty
 
-   85 ForCondition: Condition
-   86             | ForClause
+   83 Block: LBRACE $@1 StatementList $@2 RBRACE
 
-   87 ForClause: InitStmt SEMICOLON Condition SEMICOLON PosStmt
+   84 $@3: %empty
 
-   88 InitStmt: SimpleStmt
+   85 IfStmt: IF Condition $@3 Block ElseIfStmt
 
-   89 PosStmt: SimpleStmt
+   86 Condition: Expression
 
-   90 PrintStmt: PrintType LPAREN Expression RPAREN
+   87 OptionalIfStmt: IfStmt
+   88               | Block
 
-   91 PrintType: PRINT
-   92          | PRINTLN
+   89 ElseIfStmt: ElseIfStmt ELSE OptionalIfStmt
+   90           | %empty
+
+   91 ForStmt: FOR ForCondition Block
+
+   92 ForCondition: Condition
+   93             | ForClause
+
+   94 $@4: %empty
+
+   95 $@5: %empty
+
+   96 ForClause: InitStmt $@4 SEMICOLON Condition $@5 SEMICOLON PosStmt
+
+   97 InitStmt: SimpleStmt
+
+   98 PosStmt: SimpleStmt
+
+   99 PrintStmt: PrintType LPAREN Expression RPAREN
+
+  100 PrintType: PRINT
+  101          | PRINTLN
 
 
 Terminals, with rules where they appear
 
     $end (0) 0
     error (256)
-    LPAREN (258) 44 52 90
-    RPAREN (259) 44 52 90
-    LBRACK (260) 10 51
-    RBRACK (261) 10 51
-    LBRACE (262) 79
-    RBRACE (263) 79
-    SEMICOLON (264) 87
-    NEWLINE (265) 53 54 55 56 57 58 59
-    ADD (266) 31 36
-    SUB (267) 32 37
-    MUL (268) 33
-    QUO (269) 34
-    REM (270) 35
-    INC (271) 75
-    DEC (272) 76
-    LSS (273) 27
-    GTR (274) 29
-    LEQ (275) 28
-    GEQ (276) 30
-    EQL (277) 25
-    NEQ (278) 26
-    ASSIGN (279) 64 68
-    ADD_ASSIGN (280) 69
-    SUB_ASSIGN (281) 70
-    MUL_ASSIGN (282) 71
-    QUO_ASSIGN (283) 72
-    REM_ASSIGN (284) 73
-    LAND (285) 23
-    LOR (286) 24
-    NOT (287) 38
-    TRUE (288) 49
-    FALSE (289) 50
-    IF (290) 80 81 82
-    ELSE (291) 81 82
-    FOR (292) 84
-    VAR (293) 63
-    PRINT (294) 91
-    PRINTLN (295) 92
-    IDENT <string> (296) 43 63
-    INT <string> (297) 6
-    FLOAT <string> (298) 7
-    BOOL <string> (299) 9
-    STRING <string> (300) 8
-    INT_LIT <i_val> (301) 45
-    FLOAT_LIT <f_val> (302) 46
-    STRING_LIT <string> (303) 48
-    BOOL_LIT <b_val> (304) 47
+    LPAREN (258) 47 56 99
+    RPAREN (259) 48 56 99
+    LBRACK (260) 10 11
+    RBRACK (261) 10 12
+    LBRACE (262) 83
+    RBRACE (263) 83
+    SEMICOLON (264) 96
+    COMMA (265)
+    QUOTA (266)
+    NEWLINE (267) 57 58 59 60 61 62 63
+    ADD (268) 33 38
+    SUB (269) 34 39
+    MUL (270) 35
+    QUO (271) 36
+    MOD (272)
+    INC (273) 79
+    DEC (274) 80
+    REM (275) 37
+    POS (276)
+    NEG (277)
+    LSS (278) 29
+    GTR (279) 31
+    LEQ (280) 30
+    GEQ (281) 32
+    EQL (282) 27
+    NEQ (283) 28
+    ASSIGN (284) 68 72
+    ADD_ASSIGN (285) 73
+    SUB_ASSIGN (286) 74
+    MUL_ASSIGN (287) 75
+    QUO_ASSIGN (288) 76
+    REM_ASSIGN (289) 77
+    LAND (290) 25
+    LOR (291) 26
+    NOT (292) 40
+    TRUE (293) 53
+    FALSE (294) 54
+    IF (295) 85
+    ELSE (296) 89
+    FOR (297) 91
+    VAR (298) 67
+    PRINT (299) 100
+    PRINTLN (300) 101
+    IDENT <string> (301) 45 67
+    INT <string> (302) 6
+    FLOAT <string> (303) 7
+    BOOL <string> (304) 9
+    STRING <string> (305) 8
+    INT_LIT <i_val> (306) 49
+    FLOAT_LIT <f_val> (307) 50
+    STRING_LIT <string> (308) 52
+    BOOL_LIT <b_val> (309) 51
 
 
 Nonterminals, with rules where they appear
 
-    $accept (50)
+    $accept (55)
         on left: 0
-    Program (51)
+    Program (56)
         on left: 1
         on right: 0
-    StatementList (52)
+    StatementList (57)
         on left: 2 3
-        on right: 1 2 79
-    Type <string> (53)
+        on right: 1 2 83
+    Type <string> (58)
         on left: 4 5
-        on right: 10 52 63
-    TypeName <string> (54)
+        on right: 10 56 67
+    TypeName <string> (59)
         on left: 6 7 8 9
         on right: 4
-    ArrayType <string> (55)
+    ArrayType <string> (60)
         on left: 10
         on right: 5
-    Expression <string> (56)
-        on left: 11 12
-        on right: 10 11 44 51 52 61 64 66 67 74 83 90
-    B1 <string> (57)
+    LBR (61)
+        on left: 11
+        on right: 55
+    RBR (62)
+        on left: 12
+        on right: 55
+    Expression <string> (63)
         on left: 13 14
-        on right: 11 12 13
-    B2 <string> (58)
+        on right: 10 13 46 55 56 65 68 70 71 78 86 99
+    B1 <string> (64)
         on left: 15 16
         on right: 13 14 15
-    B3 <string> (59)
+    B2 <string> (65)
         on left: 17 18
         on right: 15 16 17
-    B4 <string> (60)
+    B3 <string> (66)
         on left: 19 20
         on right: 17 18 19
-    UnaryExpr <string> (61)
+    B4 <string> (67)
         on left: 21 22
-        on right: 19 20 22
-    LA <string> (62)
-        on left: 23
-        on right: 13
-    LO <string> (63)
-        on left: 24
-        on right: 11
-    Cmp_op <string> (64)
-        on left: 25 26 27 28 29 30
+        on right: 19 20 21
+    UnaryExpr <string> (68)
+        on left: 23 24
+        on right: 21 22 24
+    LA <string> (69)
+        on left: 25
         on right: 15
-    Add_op <string> (65)
-        on left: 31 32
+    LO <string> (70)
+        on left: 26
+        on right: 13
+    Cmp_op <string> (71)
+        on left: 27 28 29 30 31 32
         on right: 17
-    Mul_op <string> (66)
-        on left: 33 34 35
+    Add_op <string> (72)
+        on left: 33 34
         on right: 19
-    Unary_op <string> (67)
-        on left: 36 37 38
-        on right: 22
-    PrimaryExpr <string> (68)
-        on left: 39 40 41
-        on right: 21 51
-    Operand <string> (69)
-        on left: 42 43 44
-        on right: 39
-    Literal <string> (70)
-        on left: 45 46 47 48 49 50
-        on right: 42
-    IndexExpr <string> (71)
-        on left: 51
-        on right: 40
-    ConversionExpr <string> (72)
-        on left: 52
+    Mul_op <string> (73)
+        on left: 35 36 37
+        on right: 21
+    Unary_op (74)
+        on left: 38 39 40
+        on right: 24
+    PrimaryExpr <string> (75)
+        on left: 41 42 43
+        on right: 23 55
+    Operand <string> (76)
+        on left: 44 45 46
         on right: 41
-    Statement (73)
-        on left: 53 54 55 56 57 58 59
+    LPA (77)
+        on left: 47
+        on right: 46
+    RPA (78)
+        on left: 48
+        on right: 46
+    Literal <string> (79)
+        on left: 49 50 51 52 53 54
+        on right: 44
+    IndexExpr <string> (80)
+        on left: 55
+        on right: 42
+    ConversionExpr <string> (81)
+        on left: 56
+        on right: 43
+    Statement (82)
+        on left: 57 58 59 60 61 62 63
         on right: 2 3
-    SimpleStmt (74)
-        on left: 60 61 62
-        on right: 54 88 89
-    DeclarationStmt (75)
-        on left: 63
-        on right: 53
-    DeclarationAssign (76)
-        on left: 64 65
-        on right: 63
-    AssignmentStmt (77)
-        on left: 66
-        on right: 60
-    ExpressionVar <string> (78)
+    SimpleStmt (83)
+        on left: 64 65 66
+        on right: 58 97 98
+    DeclarationStmt (84)
         on left: 67
-        on right: 66
-    Assign_op <string> (79)
-        on left: 68 69 70 71 72 73
-        on right: 66
-    IncDecStmt (80)
-        on left: 74
-        on right: 62
-    IncDec (81)
-        on left: 75 76
-        on right: 74
-    Block (82)
-        on left: 79
-        on right: 55 80 81 82 84
-    $@1 (83)
-        on left: 77
-        on right: 79
-    $@2 (84)
-        on left: 78
-        on right: 79
-    IfStmt (85)
-        on left: 80 81 82
-        on right: 56 81
-    Condition (86)
-        on left: 83
-        on right: 80 81 82 85 87
-    ForStmt (87)
-        on left: 84
         on right: 57
-    ForCondition (88)
-        on left: 85 86
-        on right: 84
-    ForClause (89)
-        on left: 87
-        on right: 86
-    InitStmt (90)
-        on left: 88
-        on right: 87
-    PosStmt (91)
-        on left: 89
-        on right: 87
-    PrintStmt (92)
-        on left: 90
-        on right: 58
-    PrintType <string> (93)
-        on left: 91 92
-        on right: 90
+    DeclarationAssign (85)
+        on left: 68 69
+        on right: 67
+    AssignmentStmt (86)
+        on left: 70
+        on right: 64
+    ExpressionVar <string> (87)
+        on left: 71
+        on right: 70
+    Assign_op <string> (88)
+        on left: 72 73 74 75 76 77
+        on right: 70
+    IncDecStmt (89)
+        on left: 78
+        on right: 66
+    IncDec (90)
+        on left: 79 80
+        on right: 78
+    Block (91)
+        on left: 83
+        on right: 59 85 88 91
+    $@1 (92)
+        on left: 81
+        on right: 83
+    $@2 (93)
+        on left: 82
+        on right: 83
+    IfStmt (94)
+        on left: 85
+        on right: 60 87
+    $@3 (95)
+        on left: 84
+        on right: 85
+    Condition (96)
+        on left: 86
+        on right: 85 92 96
+    OptionalIfStmt (97)
+        on left: 87 88
+        on right: 89
+    ElseIfStmt (98)
+        on left: 89 90
+        on right: 85 89
+    ForStmt (99)
+        on left: 91
+        on right: 61
+    ForCondition (100)
+        on left: 92 93
+        on right: 91
+    ForClause (101)
+        on left: 96
+        on right: 93
+    $@4 (102)
+        on left: 94
+        on right: 96
+    $@5 (103)
+        on left: 95
+        on right: 96
+    InitStmt (104)
+        on left: 97
+        on right: 96
+    PosStmt (105)
+        on left: 98
+        on right: 96
+    PrintStmt (106)
+        on left: 99
+        on right: 62
+    PrintType <string> (107)
+        on left: 100 101
+        on right: 99
 
 
 State 0
@@ -368,58 +430,28 @@ State 0
     Unary_op         go to state 35
     PrimaryExpr      go to state 36
     Operand          go to state 37
-    Literal          go to state 38
-    IndexExpr        go to state 39
-    ConversionExpr   go to state 40
-    Statement        go to state 41
-    SimpleStmt       go to state 42
-    DeclarationStmt  go to state 43
-    AssignmentStmt   go to state 44
-    ExpressionVar    go to state 45
-    IncDecStmt       go to state 46
-    Block            go to state 47
-    IfStmt           go to state 48
-    ForStmt          go to state 49
-    PrintStmt        go to state 50
-    PrintType        go to state 51
+    LPA              go to state 38
+    Literal          go to state 39
+    IndexExpr        go to state 40
+    ConversionExpr   go to state 41
+    Statement        go to state 42
+    SimpleStmt       go to state 43
+    DeclarationStmt  go to state 44
+    AssignmentStmt   go to state 45
+    ExpressionVar    go to state 46
+    IncDecStmt       go to state 47
+    Block            go to state 48
+    IfStmt           go to state 49
+    ForStmt          go to state 50
+    PrintStmt        go to state 51
+    PrintType        go to state 52
 
 
 State 1
 
-   44 Operand: LPAREN . Expression RPAREN
+   47 LPA: LPAREN .
 
-    LPAREN      shift, and go to state 1
-    LBRACK      shift, and go to state 2
-    ADD         shift, and go to state 5
-    SUB         shift, and go to state 6
-    NOT         shift, and go to state 7
-    TRUE        shift, and go to state 8
-    FALSE       shift, and go to state 9
-    IDENT       shift, and go to state 15
-    INT         shift, and go to state 16
-    FLOAT       shift, and go to state 17
-    BOOL        shift, and go to state 18
-    STRING      shift, and go to state 19
-    INT_LIT     shift, and go to state 20
-    FLOAT_LIT   shift, and go to state 21
-    STRING_LIT  shift, and go to state 22
-    BOOL_LIT    shift, and go to state 23
-
-    Type            go to state 26
-    TypeName        go to state 27
-    ArrayType       go to state 28
-    Expression      go to state 52
-    B1              go to state 30
-    B2              go to state 31
-    B3              go to state 32
-    B4              go to state 33
-    UnaryExpr       go to state 34
-    Unary_op        go to state 35
-    PrimaryExpr     go to state 36
-    Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    $default  reduce using rule 47 (LPA)
 
 
 State 2
@@ -455,67 +487,66 @@ State 2
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
 
 
 State 3
 
-   79 Block: LBRACE . $@1 StatementList $@2 RBRACE
+   83 Block: LBRACE . $@1 StatementList $@2 RBRACE
 
-    $default  reduce using rule 77 ($@1)
+    $default  reduce using rule 81 ($@1)
 
     $@1  go to state 54
 
 
 State 4
 
-   59 Statement: NEWLINE .
+   63 Statement: NEWLINE .
 
-    $default  reduce using rule 59 (Statement)
+    $default  reduce using rule 63 (Statement)
 
 
 State 5
 
-   36 Unary_op: ADD .
-
-    $default  reduce using rule 36 (Unary_op)
-
-
-State 6
-
-   37 Unary_op: SUB .
-
-    $default  reduce using rule 37 (Unary_op)
-
-
-State 7
-
-   38 Unary_op: NOT .
+   38 Unary_op: ADD .
 
     $default  reduce using rule 38 (Unary_op)
 
 
+State 6
+
+   39 Unary_op: SUB .
+
+    $default  reduce using rule 39 (Unary_op)
+
+
+State 7
+
+   40 Unary_op: NOT .
+
+    $default  reduce using rule 40 (Unary_op)
+
+
 State 8
 
-   49 Literal: TRUE .
+   53 Literal: TRUE .
 
-    $default  reduce using rule 49 (Literal)
+    $default  reduce using rule 53 (Literal)
 
 
 State 9
 
-   50 Literal: FALSE .
+   54 Literal: FALSE .
 
-    $default  reduce using rule 50 (Literal)
+    $default  reduce using rule 54 (Literal)
 
 
 State 10
 
-   80 IfStmt: IF . Condition Block
-   81       | IF . Condition Block ELSE IfStmt
-   82       | IF . Condition Block ELSE Block
+   85 IfStmt: IF . Condition $@3 Block ElseIfStmt
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -546,15 +577,16 @@ State 10
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
     Condition       go to state 56
 
 
 State 11
 
-   84 ForStmt: FOR . ForCondition Block
+   91 ForStmt: FOR . ForCondition Block
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -585,13 +617,14 @@ State 11
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
     SimpleStmt      go to state 58
-    AssignmentStmt  go to state 44
-    ExpressionVar   go to state 45
-    IncDecStmt      go to state 46
+    AssignmentStmt  go to state 45
+    ExpressionVar   go to state 46
+    IncDecStmt      go to state 47
     Condition       go to state 59
     ForCondition    go to state 60
     ForClause       go to state 61
@@ -600,30 +633,30 @@ State 11
 
 State 12
 
-   63 DeclarationStmt: VAR . IDENT Type DeclarationAssign
+   67 DeclarationStmt: VAR . IDENT Type DeclarationAssign
 
     IDENT  shift, and go to state 63
 
 
 State 13
 
-   91 PrintType: PRINT .
+  100 PrintType: PRINT .
 
-    $default  reduce using rule 91 (PrintType)
+    $default  reduce using rule 100 (PrintType)
 
 
 State 14
 
-   92 PrintType: PRINTLN .
+  101 PrintType: PRINTLN .
 
-    $default  reduce using rule 92 (PrintType)
+    $default  reduce using rule 101 (PrintType)
 
 
 State 15
 
-   43 Operand: IDENT .
+   45 Operand: IDENT .
 
-    $default  reduce using rule 43 (Operand)
+    $default  reduce using rule 45 (Operand)
 
 
 State 16
@@ -656,30 +689,30 @@ State 19
 
 State 20
 
-   45 Literal: INT_LIT .
+   49 Literal: INT_LIT .
 
-    $default  reduce using rule 45 (Literal)
+    $default  reduce using rule 49 (Literal)
 
 
 State 21
 
-   46 Literal: FLOAT_LIT .
+   50 Literal: FLOAT_LIT .
 
-    $default  reduce using rule 46 (Literal)
+    $default  reduce using rule 50 (Literal)
 
 
 State 22
 
-   48 Literal: STRING_LIT .
+   52 Literal: STRING_LIT .
 
-    $default  reduce using rule 48 (Literal)
+    $default  reduce using rule 52 (Literal)
 
 
 State 23
 
-   47 Literal: BOOL_LIT .
+   51 Literal: BOOL_LIT .
 
-    $default  reduce using rule 47 (Literal)
+    $default  reduce using rule 51 (Literal)
 
 
 State 24
@@ -732,25 +765,26 @@ State 25
     Unary_op         go to state 35
     PrimaryExpr      go to state 36
     Operand          go to state 37
-    Literal          go to state 38
-    IndexExpr        go to state 39
-    ConversionExpr   go to state 40
+    LPA              go to state 38
+    Literal          go to state 39
+    IndexExpr        go to state 40
+    ConversionExpr   go to state 41
     Statement        go to state 65
-    SimpleStmt       go to state 42
-    DeclarationStmt  go to state 43
-    AssignmentStmt   go to state 44
-    ExpressionVar    go to state 45
-    IncDecStmt       go to state 46
-    Block            go to state 47
-    IfStmt           go to state 48
-    ForStmt          go to state 49
-    PrintStmt        go to state 50
-    PrintType        go to state 51
+    SimpleStmt       go to state 43
+    DeclarationStmt  go to state 44
+    AssignmentStmt   go to state 45
+    ExpressionVar    go to state 46
+    IncDecStmt       go to state 47
+    Block            go to state 48
+    IfStmt           go to state 49
+    ForStmt          go to state 50
+    PrintStmt        go to state 51
+    PrintType        go to state 52
 
 
 State 26
 
-   52 ConversionExpr: Type . LPAREN Expression RPAREN
+   56 ConversionExpr: Type . LPAREN Expression RPAREN
 
     LPAREN  shift, and go to state 66
 
@@ -771,18 +805,18 @@ State 28
 
 State 29
 
-   11 Expression: Expression . LO B1
-   61 SimpleStmt: Expression .
-   67 ExpressionVar: Expression .
-   74 IncDecStmt: Expression . IncDec
+   13 Expression: Expression . LO B1
+   65 SimpleStmt: Expression .
+   71 ExpressionVar: Expression .
+   78 IncDecStmt: Expression . IncDec
 
     INC  shift, and go to state 67
     DEC  shift, and go to state 68
     LOR  shift, and go to state 69
 
-    LBRACE    reduce using rule 61 (SimpleStmt)
-    NEWLINE   reduce using rule 61 (SimpleStmt)
-    $default  reduce using rule 67 (ExpressionVar)
+    LBRACE    reduce using rule 65 (SimpleStmt)
+    NEWLINE   reduce using rule 65 (SimpleStmt)
+    $default  reduce using rule 71 (ExpressionVar)
 
     LO      go to state 70
     IncDec  go to state 71
@@ -790,20 +824,20 @@ State 29
 
 State 30
 
-   12 Expression: B1 .
-   13 B1: B1 . LA B2
+   14 Expression: B1 .
+   15 B1: B1 . LA B2
 
     LAND  shift, and go to state 72
 
-    $default  reduce using rule 12 (Expression)
+    $default  reduce using rule 14 (Expression)
 
     LA  go to state 73
 
 
 State 31
 
-   14 B1: B2 .
-   15 B2: B2 . Cmp_op B3
+   16 B1: B2 .
+   17 B2: B2 . Cmp_op B3
 
     LSS  shift, and go to state 74
     GTR  shift, and go to state 75
@@ -812,48 +846,48 @@ State 31
     EQL  shift, and go to state 78
     NEQ  shift, and go to state 79
 
-    $default  reduce using rule 14 (B1)
+    $default  reduce using rule 16 (B1)
 
     Cmp_op  go to state 80
 
 
 State 32
 
-   16 B2: B3 .
-   17 B3: B3 . Add_op B4
+   18 B2: B3 .
+   19 B3: B3 . Add_op B4
 
     ADD  shift, and go to state 81
     SUB  shift, and go to state 82
 
-    $default  reduce using rule 16 (B2)
+    $default  reduce using rule 18 (B2)
 
     Add_op  go to state 83
 
 
 State 33
 
-   18 B3: B4 .
-   19 B4: B4 . Mul_op UnaryExpr
+   20 B3: B4 .
+   21 B4: B4 . Mul_op UnaryExpr
 
     MUL  shift, and go to state 84
     QUO  shift, and go to state 85
     REM  shift, and go to state 86
 
-    $default  reduce using rule 18 (B3)
+    $default  reduce using rule 20 (B3)
 
     Mul_op  go to state 87
 
 
 State 34
 
-   20 B4: UnaryExpr .
+   22 B4: UnaryExpr .
 
-    $default  reduce using rule 20 (B4)
+    $default  reduce using rule 22 (B4)
 
 
 State 35
 
-   22 UnaryExpr: Unary_op . UnaryExpr
+   24 UnaryExpr: Unary_op . UnaryExpr
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -879,150 +913,181 @@ State 35
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
 
 
 State 36
 
-   21 UnaryExpr: PrimaryExpr .
-   51 IndexExpr: PrimaryExpr . LBRACK Expression RBRACK
+   23 UnaryExpr: PrimaryExpr .
+   55 IndexExpr: PrimaryExpr . LBR Expression RBR
 
     LBRACK  shift, and go to state 89
 
-    $default  reduce using rule 21 (UnaryExpr)
+    $default  reduce using rule 23 (UnaryExpr)
+
+    LBR  go to state 90
 
 
 State 37
 
-   39 PrimaryExpr: Operand .
-
-    $default  reduce using rule 39 (PrimaryExpr)
-
-
-State 38
-
-   42 Operand: Literal .
-
-    $default  reduce using rule 42 (Operand)
-
-
-State 39
-
-   40 PrimaryExpr: IndexExpr .
-
-    $default  reduce using rule 40 (PrimaryExpr)
-
-
-State 40
-
-   41 PrimaryExpr: ConversionExpr .
+   41 PrimaryExpr: Operand .
 
     $default  reduce using rule 41 (PrimaryExpr)
 
 
+State 38
+
+   46 Operand: LPA . Expression RPA
+
+    LPAREN      shift, and go to state 1
+    LBRACK      shift, and go to state 2
+    ADD         shift, and go to state 5
+    SUB         shift, and go to state 6
+    NOT         shift, and go to state 7
+    TRUE        shift, and go to state 8
+    FALSE       shift, and go to state 9
+    IDENT       shift, and go to state 15
+    INT         shift, and go to state 16
+    FLOAT       shift, and go to state 17
+    BOOL        shift, and go to state 18
+    STRING      shift, and go to state 19
+    INT_LIT     shift, and go to state 20
+    FLOAT_LIT   shift, and go to state 21
+    STRING_LIT  shift, and go to state 22
+    BOOL_LIT    shift, and go to state 23
+
+    Type            go to state 26
+    TypeName        go to state 27
+    ArrayType       go to state 28
+    Expression      go to state 91
+    B1              go to state 30
+    B2              go to state 31
+    B3              go to state 32
+    B4              go to state 33
+    UnaryExpr       go to state 34
+    Unary_op        go to state 35
+    PrimaryExpr     go to state 36
+    Operand         go to state 37
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
+
+
+State 39
+
+   44 Operand: Literal .
+
+    $default  reduce using rule 44 (Operand)
+
+
+State 40
+
+   42 PrimaryExpr: IndexExpr .
+
+    $default  reduce using rule 42 (PrimaryExpr)
+
+
 State 41
+
+   43 PrimaryExpr: ConversionExpr .
+
+    $default  reduce using rule 43 (PrimaryExpr)
+
+
+State 42
 
     3 StatementList: Statement .
 
     $default  reduce using rule 3 (StatementList)
 
 
-State 42
-
-   54 Statement: SimpleStmt . NEWLINE
-
-    NEWLINE  shift, and go to state 90
-
-
 State 43
 
-   53 Statement: DeclarationStmt . NEWLINE
+   58 Statement: SimpleStmt . NEWLINE
 
-    NEWLINE  shift, and go to state 91
+    NEWLINE  shift, and go to state 92
 
 
 State 44
 
-   60 SimpleStmt: AssignmentStmt .
+   57 Statement: DeclarationStmt . NEWLINE
 
-    $default  reduce using rule 60 (SimpleStmt)
+    NEWLINE  shift, and go to state 93
 
 
 State 45
 
-   66 AssignmentStmt: ExpressionVar . Assign_op Expression
+   64 SimpleStmt: AssignmentStmt .
 
-    ASSIGN      shift, and go to state 92
-    ADD_ASSIGN  shift, and go to state 93
-    SUB_ASSIGN  shift, and go to state 94
-    MUL_ASSIGN  shift, and go to state 95
-    QUO_ASSIGN  shift, and go to state 96
-    REM_ASSIGN  shift, and go to state 97
-
-    Assign_op  go to state 98
+    $default  reduce using rule 64 (SimpleStmt)
 
 
 State 46
 
-   62 SimpleStmt: IncDecStmt .
+   70 AssignmentStmt: ExpressionVar . Assign_op Expression
 
-    $default  reduce using rule 62 (SimpleStmt)
+    ASSIGN      shift, and go to state 94
+    ADD_ASSIGN  shift, and go to state 95
+    SUB_ASSIGN  shift, and go to state 96
+    MUL_ASSIGN  shift, and go to state 97
+    QUO_ASSIGN  shift, and go to state 98
+    REM_ASSIGN  shift, and go to state 99
+
+    Assign_op  go to state 100
 
 
 State 47
 
-   55 Statement: Block . NEWLINE
+   66 SimpleStmt: IncDecStmt .
 
-    NEWLINE  shift, and go to state 99
+    $default  reduce using rule 66 (SimpleStmt)
 
 
 State 48
 
-   56 Statement: IfStmt . NEWLINE
-
-    NEWLINE  shift, and go to state 100
-
-
-State 49
-
-   57 Statement: ForStmt . NEWLINE
+   59 Statement: Block . NEWLINE
 
     NEWLINE  shift, and go to state 101
 
 
-State 50
+State 49
 
-   58 Statement: PrintStmt . NEWLINE
+   60 Statement: IfStmt . NEWLINE
 
     NEWLINE  shift, and go to state 102
 
 
+State 50
+
+   61 Statement: ForStmt . NEWLINE
+
+    NEWLINE  shift, and go to state 103
+
+
 State 51
 
-   90 PrintStmt: PrintType . LPAREN Expression RPAREN
+   62 Statement: PrintStmt . NEWLINE
 
-    LPAREN  shift, and go to state 103
+    NEWLINE  shift, and go to state 104
 
 
 State 52
 
-   11 Expression: Expression . LO B1
-   44 Operand: LPAREN Expression . RPAREN
+   99 PrintStmt: PrintType . LPAREN Expression RPAREN
 
-    RPAREN  shift, and go to state 104
-    LOR     shift, and go to state 69
-
-    LO  go to state 70
+    LPAREN  shift, and go to state 105
 
 
 State 53
 
    10 ArrayType: LBRACK Expression . RBRACK Type
-   11 Expression: Expression . LO B1
+   13 Expression: Expression . LO B1
 
-    RBRACK  shift, and go to state 105
+    RBRACK  shift, and go to state 106
     LOR     shift, and go to state 69
 
     LO  go to state 70
@@ -1030,7 +1095,7 @@ State 53
 
 State 54
 
-   79 Block: LBRACE $@1 . StatementList $@2 RBRACE
+   83 Block: LBRACE $@1 . StatementList $@2 RBRACE
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -1056,7 +1121,7 @@ State 54
     STRING_LIT  shift, and go to state 22
     BOOL_LIT    shift, and go to state 23
 
-    StatementList    go to state 106
+    StatementList    go to state 107
     Type             go to state 26
     TypeName         go to state 27
     ArrayType        go to state 28
@@ -1069,60 +1134,59 @@ State 54
     Unary_op         go to state 35
     PrimaryExpr      go to state 36
     Operand          go to state 37
-    Literal          go to state 38
-    IndexExpr        go to state 39
-    ConversionExpr   go to state 40
-    Statement        go to state 41
-    SimpleStmt       go to state 42
-    DeclarationStmt  go to state 43
-    AssignmentStmt   go to state 44
-    ExpressionVar    go to state 45
-    IncDecStmt       go to state 46
-    Block            go to state 47
-    IfStmt           go to state 48
-    ForStmt          go to state 49
-    PrintStmt        go to state 50
-    PrintType        go to state 51
+    LPA              go to state 38
+    Literal          go to state 39
+    IndexExpr        go to state 40
+    ConversionExpr   go to state 41
+    Statement        go to state 42
+    SimpleStmt       go to state 43
+    DeclarationStmt  go to state 44
+    AssignmentStmt   go to state 45
+    ExpressionVar    go to state 46
+    IncDecStmt       go to state 47
+    Block            go to state 48
+    IfStmt           go to state 49
+    ForStmt          go to state 50
+    PrintStmt        go to state 51
+    PrintType        go to state 52
 
 
 State 55
 
-   11 Expression: Expression . LO B1
-   83 Condition: Expression .
+   13 Expression: Expression . LO B1
+   86 Condition: Expression .
 
     LOR  shift, and go to state 69
 
-    $default  reduce using rule 83 (Condition)
+    $default  reduce using rule 86 (Condition)
 
     LO  go to state 70
 
 
 State 56
 
-   80 IfStmt: IF Condition . Block
-   81       | IF Condition . Block ELSE IfStmt
-   82       | IF Condition . Block ELSE Block
+   85 IfStmt: IF Condition . $@3 Block ElseIfStmt
 
-    LBRACE  shift, and go to state 3
+    $default  reduce using rule 84 ($@3)
 
-    Block  go to state 107
+    $@3  go to state 108
 
 
 State 57
 
-   11 Expression: Expression . LO B1
-   61 SimpleStmt: Expression .
-   67 ExpressionVar: Expression .
-   74 IncDecStmt: Expression . IncDec
-   83 Condition: Expression .
+   13 Expression: Expression . LO B1
+   65 SimpleStmt: Expression .
+   71 ExpressionVar: Expression .
+   78 IncDecStmt: Expression . IncDec
+   86 Condition: Expression .
 
     INC  shift, and go to state 67
     DEC  shift, and go to state 68
     LOR  shift, and go to state 69
 
-    LBRACE     reduce using rule 83 (Condition)
-    SEMICOLON  reduce using rule 61 (SimpleStmt)
-    $default   reduce using rule 67 (ExpressionVar)
+    LBRACE     reduce using rule 86 (Condition)
+    SEMICOLON  reduce using rule 65 (SimpleStmt)
+    $default   reduce using rule 71 (ExpressionVar)
 
     LO      go to state 70
     IncDec  go to state 71
@@ -1130,44 +1194,46 @@ State 57
 
 State 58
 
-   88 InitStmt: SimpleStmt .
+   97 InitStmt: SimpleStmt .
 
-    $default  reduce using rule 88 (InitStmt)
+    $default  reduce using rule 97 (InitStmt)
 
 
 State 59
 
-   85 ForCondition: Condition .
+   92 ForCondition: Condition .
 
-    $default  reduce using rule 85 (ForCondition)
+    $default  reduce using rule 92 (ForCondition)
 
 
 State 60
 
-   84 ForStmt: FOR ForCondition . Block
+   91 ForStmt: FOR ForCondition . Block
 
     LBRACE  shift, and go to state 3
 
-    Block  go to state 108
+    Block  go to state 109
 
 
 State 61
 
-   86 ForCondition: ForClause .
+   93 ForCondition: ForClause .
 
-    $default  reduce using rule 86 (ForCondition)
+    $default  reduce using rule 93 (ForCondition)
 
 
 State 62
 
-   87 ForClause: InitStmt . SEMICOLON Condition SEMICOLON PosStmt
+   96 ForClause: InitStmt . $@4 SEMICOLON Condition $@5 SEMICOLON PosStmt
 
-    SEMICOLON  shift, and go to state 109
+    $default  reduce using rule 94 ($@4)
+
+    $@4  go to state 110
 
 
 State 63
 
-   63 DeclarationStmt: VAR IDENT . Type DeclarationAssign
+   67 DeclarationStmt: VAR IDENT . Type DeclarationAssign
 
     LBRACK  shift, and go to state 2
     INT     shift, and go to state 16
@@ -1175,7 +1241,7 @@ State 63
     BOOL    shift, and go to state 18
     STRING  shift, and go to state 19
 
-    Type       go to state 110
+    Type       go to state 111
     TypeName   go to state 27
     ArrayType  go to state 28
 
@@ -1196,7 +1262,7 @@ State 65
 
 State 66
 
-   52 ConversionExpr: Type LPAREN . Expression RPAREN
+   56 ConversionExpr: Type LPAREN . Expression RPAREN
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -1218,7 +1284,7 @@ State 66
     Type            go to state 26
     TypeName        go to state 27
     ArrayType       go to state 28
-    Expression      go to state 111
+    Expression      go to state 112
     B1              go to state 30
     B2              go to state 31
     B3              go to state 32
@@ -1227,35 +1293,36 @@ State 66
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
 
 
 State 67
 
-   75 IncDec: INC .
+   79 IncDec: INC .
 
-    $default  reduce using rule 75 (IncDec)
+    $default  reduce using rule 79 (IncDec)
 
 
 State 68
 
-   76 IncDec: DEC .
+   80 IncDec: DEC .
 
-    $default  reduce using rule 76 (IncDec)
+    $default  reduce using rule 80 (IncDec)
 
 
 State 69
 
-   24 LO: LOR .
+   26 LO: LOR .
 
-    $default  reduce using rule 24 (LO)
+    $default  reduce using rule 26 (LO)
 
 
 State 70
 
-   11 Expression: Expression LO . B1
+   13 Expression: Expression LO . B1
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -1277,7 +1344,7 @@ State 70
     Type            go to state 26
     TypeName        go to state 27
     ArrayType       go to state 28
-    B1              go to state 112
+    B1              go to state 113
     B2              go to state 31
     B3              go to state 32
     B4              go to state 33
@@ -1285,28 +1352,29 @@ State 70
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
 
 
 State 71
 
-   74 IncDecStmt: Expression IncDec .
+   78 IncDecStmt: Expression IncDec .
 
-    $default  reduce using rule 74 (IncDecStmt)
+    $default  reduce using rule 78 (IncDecStmt)
 
 
 State 72
 
-   23 LA: LAND .
+   25 LA: LAND .
 
-    $default  reduce using rule 23 (LA)
+    $default  reduce using rule 25 (LA)
 
 
 State 73
 
-   13 B1: B1 LA . B2
+   15 B1: B1 LA . B2
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -1328,63 +1396,64 @@ State 73
     Type            go to state 26
     TypeName        go to state 27
     ArrayType       go to state 28
-    B2              go to state 113
+    B2              go to state 114
     B3              go to state 32
     B4              go to state 33
     UnaryExpr       go to state 34
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
 
 
 State 74
 
-   27 Cmp_op: LSS .
-
-    $default  reduce using rule 27 (Cmp_op)
-
-
-State 75
-
-   29 Cmp_op: GTR .
+   29 Cmp_op: LSS .
 
     $default  reduce using rule 29 (Cmp_op)
 
 
+State 75
+
+   31 Cmp_op: GTR .
+
+    $default  reduce using rule 31 (Cmp_op)
+
+
 State 76
 
-   28 Cmp_op: LEQ .
-
-    $default  reduce using rule 28 (Cmp_op)
-
-
-State 77
-
-   30 Cmp_op: GEQ .
+   30 Cmp_op: LEQ .
 
     $default  reduce using rule 30 (Cmp_op)
 
 
+State 77
+
+   32 Cmp_op: GEQ .
+
+    $default  reduce using rule 32 (Cmp_op)
+
+
 State 78
 
-   25 Cmp_op: EQL .
+   27 Cmp_op: EQL .
 
-    $default  reduce using rule 25 (Cmp_op)
+    $default  reduce using rule 27 (Cmp_op)
 
 
 State 79
 
-   26 Cmp_op: NEQ .
+   28 Cmp_op: NEQ .
 
-    $default  reduce using rule 26 (Cmp_op)
+    $default  reduce using rule 28 (Cmp_op)
 
 
 State 80
 
-   15 B2: B2 Cmp_op . B3
+   17 B2: B2 Cmp_op . B3
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -1406,34 +1475,35 @@ State 80
     Type            go to state 26
     TypeName        go to state 27
     ArrayType       go to state 28
-    B3              go to state 114
+    B3              go to state 115
     B4              go to state 33
     UnaryExpr       go to state 34
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
 
 
 State 81
 
-   31 Add_op: ADD .
+   33 Add_op: ADD .
 
-    $default  reduce using rule 31 (Add_op)
+    $default  reduce using rule 33 (Add_op)
 
 
 State 82
 
-   32 Add_op: SUB .
+   34 Add_op: SUB .
 
-    $default  reduce using rule 32 (Add_op)
+    $default  reduce using rule 34 (Add_op)
 
 
 State 83
 
-   17 B3: B3 Add_op . B4
+   19 B3: B3 Add_op . B4
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -1455,40 +1525,41 @@ State 83
     Type            go to state 26
     TypeName        go to state 27
     ArrayType       go to state 28
-    B4              go to state 115
+    B4              go to state 116
     UnaryExpr       go to state 34
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
 
 
 State 84
 
-   33 Mul_op: MUL .
-
-    $default  reduce using rule 33 (Mul_op)
-
-
-State 85
-
-   34 Mul_op: QUO .
-
-    $default  reduce using rule 34 (Mul_op)
-
-
-State 86
-
-   35 Mul_op: REM .
+   35 Mul_op: MUL .
 
     $default  reduce using rule 35 (Mul_op)
 
 
+State 85
+
+   36 Mul_op: QUO .
+
+    $default  reduce using rule 36 (Mul_op)
+
+
+State 86
+
+   37 Mul_op: REM .
+
+    $default  reduce using rule 37 (Mul_op)
+
+
 State 87
 
-   19 B4: B4 Mul_op . UnaryExpr
+   21 B4: B4 Mul_op . UnaryExpr
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -1510,119 +1581,33 @@ State 87
     Type            go to state 26
     TypeName        go to state 27
     ArrayType       go to state 28
-    UnaryExpr       go to state 116
+    UnaryExpr       go to state 117
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
 
 
 State 88
 
-   22 UnaryExpr: Unary_op UnaryExpr .
+   24 UnaryExpr: Unary_op UnaryExpr .
 
-    $default  reduce using rule 22 (UnaryExpr)
+    $default  reduce using rule 24 (UnaryExpr)
 
 
 State 89
 
-   51 IndexExpr: PrimaryExpr LBRACK . Expression RBRACK
+   11 LBR: LBRACK .
 
-    LPAREN      shift, and go to state 1
-    LBRACK      shift, and go to state 2
-    ADD         shift, and go to state 5
-    SUB         shift, and go to state 6
-    NOT         shift, and go to state 7
-    TRUE        shift, and go to state 8
-    FALSE       shift, and go to state 9
-    IDENT       shift, and go to state 15
-    INT         shift, and go to state 16
-    FLOAT       shift, and go to state 17
-    BOOL        shift, and go to state 18
-    STRING      shift, and go to state 19
-    INT_LIT     shift, and go to state 20
-    FLOAT_LIT   shift, and go to state 21
-    STRING_LIT  shift, and go to state 22
-    BOOL_LIT    shift, and go to state 23
-
-    Type            go to state 26
-    TypeName        go to state 27
-    ArrayType       go to state 28
-    Expression      go to state 117
-    B1              go to state 30
-    B2              go to state 31
-    B3              go to state 32
-    B4              go to state 33
-    UnaryExpr       go to state 34
-    Unary_op        go to state 35
-    PrimaryExpr     go to state 36
-    Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    $default  reduce using rule 11 (LBR)
 
 
 State 90
 
-   54 Statement: SimpleStmt NEWLINE .
-
-    $default  reduce using rule 54 (Statement)
-
-
-State 91
-
-   53 Statement: DeclarationStmt NEWLINE .
-
-    $default  reduce using rule 53 (Statement)
-
-
-State 92
-
-   68 Assign_op: ASSIGN .
-
-    $default  reduce using rule 68 (Assign_op)
-
-
-State 93
-
-   69 Assign_op: ADD_ASSIGN .
-
-    $default  reduce using rule 69 (Assign_op)
-
-
-State 94
-
-   70 Assign_op: SUB_ASSIGN .
-
-    $default  reduce using rule 70 (Assign_op)
-
-
-State 95
-
-   71 Assign_op: MUL_ASSIGN .
-
-    $default  reduce using rule 71 (Assign_op)
-
-
-State 96
-
-   72 Assign_op: QUO_ASSIGN .
-
-    $default  reduce using rule 72 (Assign_op)
-
-
-State 97
-
-   73 Assign_op: REM_ASSIGN .
-
-    $default  reduce using rule 73 (Assign_op)
-
-
-State 98
-
-   66 AssignmentStmt: ExpressionVar Assign_op . Expression
+   55 IndexExpr: PrimaryExpr LBR . Expression RBR
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -1653,42 +1638,83 @@ State 98
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
 
 
-State 99
+State 91
 
-   55 Statement: Block NEWLINE .
+   13 Expression: Expression . LO B1
+   46 Operand: LPA Expression . RPA
 
-    $default  reduce using rule 55 (Statement)
+    RPAREN  shift, and go to state 119
+    LOR     shift, and go to state 69
 
-
-State 100
-
-   56 Statement: IfStmt NEWLINE .
-
-    $default  reduce using rule 56 (Statement)
+    LO   go to state 70
+    RPA  go to state 120
 
 
-State 101
+State 92
 
-   57 Statement: ForStmt NEWLINE .
-
-    $default  reduce using rule 57 (Statement)
-
-
-State 102
-
-   58 Statement: PrintStmt NEWLINE .
+   58 Statement: SimpleStmt NEWLINE .
 
     $default  reduce using rule 58 (Statement)
 
 
-State 103
+State 93
 
-   90 PrintStmt: PrintType LPAREN . Expression RPAREN
+   57 Statement: DeclarationStmt NEWLINE .
+
+    $default  reduce using rule 57 (Statement)
+
+
+State 94
+
+   72 Assign_op: ASSIGN .
+
+    $default  reduce using rule 72 (Assign_op)
+
+
+State 95
+
+   73 Assign_op: ADD_ASSIGN .
+
+    $default  reduce using rule 73 (Assign_op)
+
+
+State 96
+
+   74 Assign_op: SUB_ASSIGN .
+
+    $default  reduce using rule 74 (Assign_op)
+
+
+State 97
+
+   75 Assign_op: MUL_ASSIGN .
+
+    $default  reduce using rule 75 (Assign_op)
+
+
+State 98
+
+   76 Assign_op: QUO_ASSIGN .
+
+    $default  reduce using rule 76 (Assign_op)
+
+
+State 99
+
+   77 Assign_op: REM_ASSIGN .
+
+    $default  reduce using rule 77 (Assign_op)
+
+
+State 100
+
+   70 AssignmentStmt: ExpressionVar Assign_op . Expression
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -1710,7 +1736,7 @@ State 103
     Type            go to state 26
     TypeName        go to state 27
     ArrayType       go to state 28
-    Expression      go to state 119
+    Expression      go to state 121
     B1              go to state 30
     B2              go to state 31
     B3              go to state 32
@@ -1719,19 +1745,80 @@ State 103
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
+
+
+State 101
+
+   59 Statement: Block NEWLINE .
+
+    $default  reduce using rule 59 (Statement)
+
+
+State 102
+
+   60 Statement: IfStmt NEWLINE .
+
+    $default  reduce using rule 60 (Statement)
+
+
+State 103
+
+   61 Statement: ForStmt NEWLINE .
+
+    $default  reduce using rule 61 (Statement)
 
 
 State 104
 
-   44 Operand: LPAREN Expression RPAREN .
+   62 Statement: PrintStmt NEWLINE .
 
-    $default  reduce using rule 44 (Operand)
+    $default  reduce using rule 62 (Statement)
 
 
 State 105
+
+   99 PrintStmt: PrintType LPAREN . Expression RPAREN
+
+    LPAREN      shift, and go to state 1
+    LBRACK      shift, and go to state 2
+    ADD         shift, and go to state 5
+    SUB         shift, and go to state 6
+    NOT         shift, and go to state 7
+    TRUE        shift, and go to state 8
+    FALSE       shift, and go to state 9
+    IDENT       shift, and go to state 15
+    INT         shift, and go to state 16
+    FLOAT       shift, and go to state 17
+    BOOL        shift, and go to state 18
+    STRING      shift, and go to state 19
+    INT_LIT     shift, and go to state 20
+    FLOAT_LIT   shift, and go to state 21
+    STRING_LIT  shift, and go to state 22
+    BOOL_LIT    shift, and go to state 23
+
+    Type            go to state 26
+    TypeName        go to state 27
+    ArrayType       go to state 28
+    Expression      go to state 122
+    B1              go to state 30
+    B2              go to state 31
+    B3              go to state 32
+    B4              go to state 33
+    UnaryExpr       go to state 34
+    Unary_op        go to state 35
+    PrimaryExpr     go to state 36
+    Operand         go to state 37
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
+
+
+State 106
 
    10 ArrayType: LBRACK Expression RBRACK . Type
 
@@ -1741,15 +1828,15 @@ State 105
     BOOL    shift, and go to state 18
     STRING  shift, and go to state 19
 
-    Type       go to state 120
+    Type       go to state 123
     TypeName   go to state 27
     ArrayType  go to state 28
 
 
-State 106
+State 107
 
     2 StatementList: StatementList . Statement
-   79 Block: LBRACE $@1 StatementList . $@2 RBRACE
+   83 Block: LBRACE $@1 StatementList . $@2 RBRACE
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -1775,7 +1862,7 @@ State 106
     STRING_LIT  shift, and go to state 22
     BOOL_LIT    shift, and go to state 23
 
-    $default  reduce using rule 78 ($@2)
+    $default  reduce using rule 82 ($@2)
 
     Type             go to state 26
     TypeName         go to state 27
@@ -1789,44 +1876,207 @@ State 106
     Unary_op         go to state 35
     PrimaryExpr      go to state 36
     Operand          go to state 37
-    Literal          go to state 38
-    IndexExpr        go to state 39
-    ConversionExpr   go to state 40
+    LPA              go to state 38
+    Literal          go to state 39
+    IndexExpr        go to state 40
+    ConversionExpr   go to state 41
     Statement        go to state 65
-    SimpleStmt       go to state 42
-    DeclarationStmt  go to state 43
-    AssignmentStmt   go to state 44
-    ExpressionVar    go to state 45
-    IncDecStmt       go to state 46
-    Block            go to state 47
-    $@2              go to state 121
-    IfStmt           go to state 48
-    ForStmt          go to state 49
-    PrintStmt        go to state 50
-    PrintType        go to state 51
-
-
-State 107
-
-   80 IfStmt: IF Condition Block .
-   81       | IF Condition Block . ELSE IfStmt
-   82       | IF Condition Block . ELSE Block
-
-    ELSE  shift, and go to state 122
-
-    $default  reduce using rule 80 (IfStmt)
+    SimpleStmt       go to state 43
+    DeclarationStmt  go to state 44
+    AssignmentStmt   go to state 45
+    ExpressionVar    go to state 46
+    IncDecStmt       go to state 47
+    Block            go to state 48
+    $@2              go to state 124
+    IfStmt           go to state 49
+    ForStmt          go to state 50
+    PrintStmt        go to state 51
+    PrintType        go to state 52
 
 
 State 108
 
-   84 ForStmt: FOR ForCondition Block .
+   85 IfStmt: IF Condition $@3 . Block ElseIfStmt
 
-    $default  reduce using rule 84 (ForStmt)
+    LBRACE  shift, and go to state 3
+
+    Block  go to state 125
 
 
 State 109
 
-   87 ForClause: InitStmt SEMICOLON . Condition SEMICOLON PosStmt
+   91 ForStmt: FOR ForCondition Block .
+
+    $default  reduce using rule 91 (ForStmt)
+
+
+State 110
+
+   96 ForClause: InitStmt $@4 . SEMICOLON Condition $@5 SEMICOLON PosStmt
+
+    SEMICOLON  shift, and go to state 126
+
+
+State 111
+
+   67 DeclarationStmt: VAR IDENT Type . DeclarationAssign
+
+    ASSIGN  shift, and go to state 127
+
+    $default  reduce using rule 69 (DeclarationAssign)
+
+    DeclarationAssign  go to state 128
+
+
+State 112
+
+   13 Expression: Expression . LO B1
+   56 ConversionExpr: Type LPAREN Expression . RPAREN
+
+    RPAREN  shift, and go to state 129
+    LOR     shift, and go to state 69
+
+    LO  go to state 70
+
+
+State 113
+
+   13 Expression: Expression LO B1 .
+   15 B1: B1 . LA B2
+
+    LAND  shift, and go to state 72
+
+    $default  reduce using rule 13 (Expression)
+
+    LA  go to state 73
+
+
+State 114
+
+   15 B1: B1 LA B2 .
+   17 B2: B2 . Cmp_op B3
+
+    LSS  shift, and go to state 74
+    GTR  shift, and go to state 75
+    LEQ  shift, and go to state 76
+    GEQ  shift, and go to state 77
+    EQL  shift, and go to state 78
+    NEQ  shift, and go to state 79
+
+    $default  reduce using rule 15 (B1)
+
+    Cmp_op  go to state 80
+
+
+State 115
+
+   17 B2: B2 Cmp_op B3 .
+   19 B3: B3 . Add_op B4
+
+    ADD  shift, and go to state 81
+    SUB  shift, and go to state 82
+
+    $default  reduce using rule 17 (B2)
+
+    Add_op  go to state 83
+
+
+State 116
+
+   19 B3: B3 Add_op B4 .
+   21 B4: B4 . Mul_op UnaryExpr
+
+    MUL  shift, and go to state 84
+    QUO  shift, and go to state 85
+    REM  shift, and go to state 86
+
+    $default  reduce using rule 19 (B3)
+
+    Mul_op  go to state 87
+
+
+State 117
+
+   21 B4: B4 Mul_op UnaryExpr .
+
+    $default  reduce using rule 21 (B4)
+
+
+State 118
+
+   13 Expression: Expression . LO B1
+   55 IndexExpr: PrimaryExpr LBR Expression . RBR
+
+    RBRACK  shift, and go to state 130
+    LOR     shift, and go to state 69
+
+    RBR  go to state 131
+    LO   go to state 70
+
+
+State 119
+
+   48 RPA: RPAREN .
+
+    $default  reduce using rule 48 (RPA)
+
+
+State 120
+
+   46 Operand: LPA Expression RPA .
+
+    $default  reduce using rule 46 (Operand)
+
+
+State 121
+
+   13 Expression: Expression . LO B1
+   70 AssignmentStmt: ExpressionVar Assign_op Expression .
+
+    LOR  shift, and go to state 69
+
+    $default  reduce using rule 70 (AssignmentStmt)
+
+    LO  go to state 70
+
+
+State 122
+
+   13 Expression: Expression . LO B1
+   99 PrintStmt: PrintType LPAREN Expression . RPAREN
+
+    RPAREN  shift, and go to state 132
+    LOR     shift, and go to state 69
+
+    LO  go to state 70
+
+
+State 123
+
+   10 ArrayType: LBRACK Expression RBRACK Type .
+
+    $default  reduce using rule 10 (ArrayType)
+
+
+State 124
+
+   83 Block: LBRACE $@1 StatementList $@2 . RBRACE
+
+    RBRACE  shift, and go to state 133
+
+
+State 125
+
+   85 IfStmt: IF Condition $@3 Block . ElseIfStmt
+
+    $default  reduce using rule 90 (ElseIfStmt)
+
+    ElseIfStmt  go to state 134
+
+
+State 126
+
+   96 ForClause: InitStmt $@4 SEMICOLON . Condition $@5 SEMICOLON PosStmt
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -1857,167 +2107,16 @@ State 109
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
-    Condition       go to state 123
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
+    Condition       go to state 135
 
 
-State 110
+State 127
 
-   63 DeclarationStmt: VAR IDENT Type . DeclarationAssign
-
-    ASSIGN  shift, and go to state 124
-
-    $default  reduce using rule 65 (DeclarationAssign)
-
-    DeclarationAssign  go to state 125
-
-
-State 111
-
-   11 Expression: Expression . LO B1
-   52 ConversionExpr: Type LPAREN Expression . RPAREN
-
-    RPAREN  shift, and go to state 126
-    LOR     shift, and go to state 69
-
-    LO  go to state 70
-
-
-State 112
-
-   11 Expression: Expression LO B1 .
-   13 B1: B1 . LA B2
-
-    LAND  shift, and go to state 72
-
-    $default  reduce using rule 11 (Expression)
-
-    LA  go to state 73
-
-
-State 113
-
-   13 B1: B1 LA B2 .
-   15 B2: B2 . Cmp_op B3
-
-    LSS  shift, and go to state 74
-    GTR  shift, and go to state 75
-    LEQ  shift, and go to state 76
-    GEQ  shift, and go to state 77
-    EQL  shift, and go to state 78
-    NEQ  shift, and go to state 79
-
-    $default  reduce using rule 13 (B1)
-
-    Cmp_op  go to state 80
-
-
-State 114
-
-   15 B2: B2 Cmp_op B3 .
-   17 B3: B3 . Add_op B4
-
-    ADD  shift, and go to state 81
-    SUB  shift, and go to state 82
-
-    $default  reduce using rule 15 (B2)
-
-    Add_op  go to state 83
-
-
-State 115
-
-   17 B3: B3 Add_op B4 .
-   19 B4: B4 . Mul_op UnaryExpr
-
-    MUL  shift, and go to state 84
-    QUO  shift, and go to state 85
-    REM  shift, and go to state 86
-
-    $default  reduce using rule 17 (B3)
-
-    Mul_op  go to state 87
-
-
-State 116
-
-   19 B4: B4 Mul_op UnaryExpr .
-
-    $default  reduce using rule 19 (B4)
-
-
-State 117
-
-   11 Expression: Expression . LO B1
-   51 IndexExpr: PrimaryExpr LBRACK Expression . RBRACK
-
-    RBRACK  shift, and go to state 127
-    LOR     shift, and go to state 69
-
-    LO  go to state 70
-
-
-State 118
-
-   11 Expression: Expression . LO B1
-   66 AssignmentStmt: ExpressionVar Assign_op Expression .
-
-    LOR  shift, and go to state 69
-
-    $default  reduce using rule 66 (AssignmentStmt)
-
-    LO  go to state 70
-
-
-State 119
-
-   11 Expression: Expression . LO B1
-   90 PrintStmt: PrintType LPAREN Expression . RPAREN
-
-    RPAREN  shift, and go to state 128
-    LOR     shift, and go to state 69
-
-    LO  go to state 70
-
-
-State 120
-
-   10 ArrayType: LBRACK Expression RBRACK Type .
-
-    $default  reduce using rule 10 (ArrayType)
-
-
-State 121
-
-   79 Block: LBRACE $@1 StatementList $@2 . RBRACE
-
-    RBRACE  shift, and go to state 129
-
-
-State 122
-
-   81 IfStmt: IF Condition Block ELSE . IfStmt
-   82       | IF Condition Block ELSE . Block
-
-    LBRACE  shift, and go to state 3
-    IF      shift, and go to state 10
-
-    Block   go to state 130
-    IfStmt  go to state 131
-
-
-State 123
-
-   87 ForClause: InitStmt SEMICOLON Condition . SEMICOLON PosStmt
-
-    SEMICOLON  shift, and go to state 132
-
-
-State 124
-
-   64 DeclarationAssign: ASSIGN . Expression
+   68 DeclarationAssign: ASSIGN . Expression
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -2039,7 +2138,7 @@ State 124
     Type            go to state 26
     TypeName        go to state 27
     ArrayType       go to state 28
-    Expression      go to state 133
+    Expression      go to state 136
     B1              go to state 30
     B2              go to state 31
     B3              go to state 32
@@ -2048,63 +2147,129 @@ State 124
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
-
-
-State 125
-
-   63 DeclarationStmt: VAR IDENT Type DeclarationAssign .
-
-    $default  reduce using rule 63 (DeclarationStmt)
-
-
-State 126
-
-   52 ConversionExpr: Type LPAREN Expression RPAREN .
-
-    $default  reduce using rule 52 (ConversionExpr)
-
-
-State 127
-
-   51 IndexExpr: PrimaryExpr LBRACK Expression RBRACK .
-
-    $default  reduce using rule 51 (IndexExpr)
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
 
 
 State 128
 
-   90 PrintStmt: PrintType LPAREN Expression RPAREN .
+   67 DeclarationStmt: VAR IDENT Type DeclarationAssign .
 
-    $default  reduce using rule 90 (PrintStmt)
+    $default  reduce using rule 67 (DeclarationStmt)
 
 
 State 129
 
-   79 Block: LBRACE $@1 StatementList $@2 RBRACE .
+   56 ConversionExpr: Type LPAREN Expression RPAREN .
 
-    $default  reduce using rule 79 (Block)
+    $default  reduce using rule 56 (ConversionExpr)
 
 
 State 130
 
-   82 IfStmt: IF Condition Block ELSE Block .
+   12 RBR: RBRACK .
 
-    $default  reduce using rule 82 (IfStmt)
+    $default  reduce using rule 12 (RBR)
 
 
 State 131
 
-   81 IfStmt: IF Condition Block ELSE IfStmt .
+   55 IndexExpr: PrimaryExpr LBR Expression RBR .
 
-    $default  reduce using rule 81 (IfStmt)
+    $default  reduce using rule 55 (IndexExpr)
 
 
 State 132
 
-   87 ForClause: InitStmt SEMICOLON Condition SEMICOLON . PosStmt
+   99 PrintStmt: PrintType LPAREN Expression RPAREN .
+
+    $default  reduce using rule 99 (PrintStmt)
+
+
+State 133
+
+   83 Block: LBRACE $@1 StatementList $@2 RBRACE .
+
+    $default  reduce using rule 83 (Block)
+
+
+State 134
+
+   85 IfStmt: IF Condition $@3 Block ElseIfStmt .
+   89 ElseIfStmt: ElseIfStmt . ELSE OptionalIfStmt
+
+    ELSE  shift, and go to state 137
+
+    ELSE      [reduce using rule 85 (IfStmt)]
+    $default  reduce using rule 85 (IfStmt)
+
+
+State 135
+
+   96 ForClause: InitStmt $@4 SEMICOLON Condition . $@5 SEMICOLON PosStmt
+
+    $default  reduce using rule 95 ($@5)
+
+    $@5  go to state 138
+
+
+State 136
+
+   13 Expression: Expression . LO B1
+   68 DeclarationAssign: ASSIGN Expression .
+
+    LOR  shift, and go to state 69
+
+    $default  reduce using rule 68 (DeclarationAssign)
+
+    LO  go to state 70
+
+
+State 137
+
+   89 ElseIfStmt: ElseIfStmt ELSE . OptionalIfStmt
+
+    LBRACE  shift, and go to state 3
+    IF      shift, and go to state 10
+
+    Block           go to state 139
+    IfStmt          go to state 140
+    OptionalIfStmt  go to state 141
+
+
+State 138
+
+   96 ForClause: InitStmt $@4 SEMICOLON Condition $@5 . SEMICOLON PosStmt
+
+    SEMICOLON  shift, and go to state 142
+
+
+State 139
+
+   88 OptionalIfStmt: Block .
+
+    $default  reduce using rule 88 (OptionalIfStmt)
+
+
+State 140
+
+   87 OptionalIfStmt: IfStmt .
+
+    $default  reduce using rule 87 (OptionalIfStmt)
+
+
+State 141
+
+   89 ElseIfStmt: ElseIfStmt ELSE OptionalIfStmt .
+
+    $default  reduce using rule 89 (ElseIfStmt)
+
+
+State 142
+
+   96 ForClause: InitStmt $@4 SEMICOLON Condition $@5 SEMICOLON . PosStmt
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -2135,37 +2300,26 @@ State 132
     Unary_op        go to state 35
     PrimaryExpr     go to state 36
     Operand         go to state 37
-    Literal         go to state 38
-    IndexExpr       go to state 39
-    ConversionExpr  go to state 40
-    SimpleStmt      go to state 134
-    AssignmentStmt  go to state 44
-    ExpressionVar   go to state 45
-    IncDecStmt      go to state 46
-    PosStmt         go to state 135
+    LPA             go to state 38
+    Literal         go to state 39
+    IndexExpr       go to state 40
+    ConversionExpr  go to state 41
+    SimpleStmt      go to state 143
+    AssignmentStmt  go to state 45
+    ExpressionVar   go to state 46
+    IncDecStmt      go to state 47
+    PosStmt         go to state 144
 
 
-State 133
+State 143
 
-   11 Expression: Expression . LO B1
-   64 DeclarationAssign: ASSIGN Expression .
+   98 PosStmt: SimpleStmt .
 
-    LOR  shift, and go to state 69
-
-    $default  reduce using rule 64 (DeclarationAssign)
-
-    LO  go to state 70
+    $default  reduce using rule 98 (PosStmt)
 
 
-State 134
+State 144
 
-   89 PosStmt: SimpleStmt .
+   96 ForClause: InitStmt $@4 SEMICOLON Condition $@5 SEMICOLON PosStmt .
 
-    $default  reduce using rule 89 (PosStmt)
-
-
-State 135
-
-   87 ForClause: InitStmt SEMICOLON Condition SEMICOLON PosStmt .
-
-    $default  reduce using rule 87 (ForClause)
+    $default  reduce using rule 96 (ForClause)
