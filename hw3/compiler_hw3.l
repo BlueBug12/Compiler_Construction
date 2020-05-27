@@ -41,7 +41,7 @@ fnumber ({digit}*\.{digit}+)
 "+"         { return ADD; }
 "-"         { return SUB; }
 "*"         { return MUL; }
-"/"         { return QUO; }
+"/"         { return DIV; }
 "%"         { return REM; }
 "++"        { return INC; }
 "--"        { return DEC; }
@@ -57,7 +57,7 @@ fnumber ({digit}*\.{digit}+)
 "+="        { return ADD_ASSIGN; }
 "-="        { return SUB_ASSIGN; }
 "*="        { return MUL_ASSIGN; }
-"/="        { return QUO_ASSIGN; }
+"/="        { return DIV_ASSIGN; }
 "%="        { return REM_ASSIGN; }
 
 "&&"        { return LAND; }

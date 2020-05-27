@@ -60,7 +60,7 @@ extern int yydebug;
     ADD = 266,
     SUB = 267,
     MUL = 268,
-    QUO = 269,
+    DIV = 269,
     REM = 270,
     INC = 271,
     DEC = 272,
@@ -74,7 +74,7 @@ extern int yydebug;
     ADD_ASSIGN = 280,
     SUB_ASSIGN = 281,
     MUL_ASSIGN = 282,
-    QUO_ASSIGN = 283,
+    DIV_ASSIGN = 283,
     REM_ASSIGN = 284,
     LAND = 285,
     LOR = 286,
@@ -110,7 +110,7 @@ extern int yydebug;
 #define ADD 266
 #define SUB 267
 #define MUL 268
-#define QUO 269
+#define DIV 269
 #define REM 270
 #define INC 271
 #define DEC 272
@@ -124,7 +124,7 @@ extern int yydebug;
 #define ADD_ASSIGN 280
 #define SUB_ASSIGN 281
 #define MUL_ASSIGN 282
-#define QUO_ASSIGN 283
+#define DIV_ASSIGN 283
 #define REM_ASSIGN 284
 #define LAND 285
 #define LOR 286
@@ -151,7 +151,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 64 "compiler_hw3.y"
+#line 75 "compiler_hw3.y"
 
     int i_val;
     float f_val;

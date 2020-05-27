@@ -919,7 +919,7 @@ YY_RULE_SETUP
 case 12:
 YY_RULE_SETUP
 #line 44 "compiler_hw3.l"
-{ return QUO; }
+{ return DIV; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
@@ -989,7 +989,7 @@ YY_RULE_SETUP
 case 26:
 YY_RULE_SETUP
 #line 60 "compiler_hw3.l"
-{ return QUO_ASSIGN; }
+{ return DIV_ASSIGN; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
