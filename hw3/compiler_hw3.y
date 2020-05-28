@@ -62,7 +62,8 @@
 	bool HAS_ERROR = false;
 	bool left_array=false;
 	bool l_value=true;
-	int array_or_address=false;//-1 is array
+	int l_address=-1;
+	int array_or_address=-10;//-1 is array -10 is default
 	int cmp_number=0; 
 	FILE *file;
 %}
@@ -336,12 +337,13 @@ Operand
 		bool is_array=0;
 		$$=find_type($1,&foo,&is_array);
 		var_flag=1;
-		if(!l_value){
-			if($$[0]=='s'||is_array)
-				fprintf(file,"\taload %d\n",address);
-			else
-				fprintf(file,"\t%cload %d\n",$$[0],address);
-		}
+		if(l_value)
+			l_address=address;	
+		if($$[0]=='s'||is_array)	
+			fprintf(file,"\taload %d\n",address);
+		else if(!l_value)
+			fprintf(file,"\t%cload %d\n",$$[0],address);
+		
 	}
 	| LPAREN  Expression RPAREN{$$=$2;}
 ;
@@ -357,7 +359,11 @@ Literal
 
 /*Index expression*/
 IndexExpr
-    : PrimaryExpr LBRACK Expression RBRACK{$$=$1;}//need to be checked
+    : PrimaryExpr LBRACK Expression RBRACK{
+		$$=$1;
+		if(!l_value)
+			fprintf(file,"\t%caload\n",$1[0]);
+	}//need to be checked
 ;
 
 /*Coversion (type casting)*/
@@ -389,7 +395,7 @@ DeclarationStmt
 		int address;
 		if($3[0]=='a'){
 			address=create_symbol(_var,"array",_type+1);
-			fprintf(file,"\tastore %d\n",address);				
+			fprintf(file,"\tastore %d\n\n",address);				
 		}
 		else{
 			if(!$4)
@@ -397,9 +403,9 @@ DeclarationStmt
 			strcpy(_type,$3);
 			address=create_symbol(_var,_type,"-");				
 			if(!strcmp($3,"string"))
-				fprintf(file,"\tastore %d\n",address);
+				fprintf(file,"\tastore %d\n\n",address);
 			else
-				fprintf(file,"\t%cstore %d\n",$3[0],address);
+				fprintf(file,"\t%cstore %d\n\n",$3[0],address);
 		}
 	}
 ;
@@ -412,13 +418,14 @@ DeclarationAssign
 AssignmentStmt 
     : ExpressionVar Assign_op  Expression{	
 		left_array=0;//reset
+		l_value=1;
 		if(array_or_address==-1){
-			fprintf(file,"\t%castore\n",$1[0]);
+			fprintf(file,"\t%castore\n\n",$1[0]);
 		}
 		else{
-			fprintf(file,"\t%cstore %d\n",$1[0],array_or_address);
+			fprintf(file,"\t%cstore %d\n\n",$1[0],l_address);
 		}
-		array_or_address=0;//reset 
+		array_or_address=-10;//reset 
 
 		if(!strcmp($1,"unknown")||!strcmp($1,"unknown")){
 			//printf("error:%d: undefined: %s\n",yylineno,id);
