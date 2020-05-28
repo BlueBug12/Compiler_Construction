@@ -15,6 +15,7 @@
 	static int scope=0;	
     static int address=-1;
 	static int foo=0;
+	static bool foo_b=0;
 	static bool var_flag=0;
 	static bool left_value_error=0;
     typedef struct symbol_table stb;
@@ -39,21 +40,32 @@
     }
 
     /* Symbol table function - you can add new function if needed. */
-    static void create_symbol(char* id,char* type, char* etype);
+    static int create_symbol(char* id,char* type, char* etype);//return register address
     static void insert_symbol(stb* n);
-    static void lookup_symbol(char*id,stb* n);
+    static int lookup_symbol(char*id,stb* n);
     static void dump_symbol(stb* n);
 	
 	stb* new_stb_node(int index,char* name, char* type,
 						char* element_type,stb* prev,stb*child,stb* last_child);
 
-	char* find_type(char* id,int* line);
+	char* find_type(char* id,int* line,bool* is_array);//need to merge with lookup_symbol
+	char* lower_str(char* str);
+	char* lower_substr(char* str, int len);
 	/*initialize the head of symbol table*/
 	stb* tail = NULL;
-	
+	//char* dict(const char* instruction);
+	/*Global variables*/	
 	char _type [9];
 	char _var [128];
 	char _etype [7];
+	char instruction[10];
+	bool HAS_ERROR = false;
+	bool left_array=false;
+	bool l_value=true;
+	int l_address=-1;
+	int array_or_address=-10;//-1 is array -10 is default
+	int cmp_number=0; 
+	FILE *file;
 %}
 
 %error-verbose
@@ -99,9 +111,9 @@
 %type <string> Type TypeName ArrayType PrintType Operand /*Binary_op*/
 %type <string> ConversionExpr PrimaryExpr UnaryExpr Literal IndexExpr Expression
 %type <string> B1 B2 B3 B4 Add_op Mul_op Cmp_op Unary_op Assign_op LA LO ExpressionVar
-
-%left ADD SUB
-%left MUL QUO
+%type <b_val> DeclarationAssign 
+//%left ADD SUB
+//%left MUL QUO
 /* Yacc will start at this nonterminal */
 %start Program
 
@@ -123,6 +135,9 @@ Type
     | ArrayType{
 		_type[0]='a';
 		strncpy(_type+1,$1,strlen($1));
+		char* temp = lower_substr($1,strlen($1)-2);
+		fprintf(file,"\tnewarray %s\n",temp);
+		free(temp);
 		$$=_type;
 	}
 ;
@@ -149,13 +164,18 @@ Expression
 		}
 		else if(!strcmp($1,"float32")||!strcmp($3,"float32")){	
 			printf("error:%d: invalid operation: (operator LOR not defined on float32)\n",yylineno);
+			HAS_ERROR=1;
 		}
 		else if(!strcmp($1,"int32")||!strcmp($3,"int32")){		
 			printf("error:%d: invalid operation: (operator LOR not defined on int32)\n",yylineno);
+			HAS_ERROR=1;
 		}
 		
 		$$="bool";	
 		printf("%s\n",$2);
+		char* temp=lower_str($2+1);
+		fprintf(file,"\ti%s\n",temp);
+		free(temp);
 	}
 	| B1{$$=$1;}
 ;
@@ -168,17 +188,23 @@ B1
 		}
 		else if(!strcmp($1,"float32")||!strcmp($3,"float32")){	
 			printf("error:%d: invalid operation: (operator LAND not defined on float32)\n",yylineno);
+			HAS_ERROR=1;
 		}
 		else if(!strcmp($1,"int32")||!strcmp($3,"int32")){		
 			printf("error:%d: invalid operation: (operator LAND not defined on int32)\n",yylineno);
+			HAS_ERROR=1;
 		}
 		
 		
 		else if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
+			HAS_ERROR=1;
 		}
 		$$="bool";
 		printf("%s\n",$2);
+		char* temp=lower_str($2+1);
+		fprintf(file,"\ti%s\n",temp);
+		free(temp);
 	}
 	|B2{$$=$1;}
 ;
@@ -190,9 +216,30 @@ B2
 		}
 		else if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
+			HAS_ERROR=1;
 		}
 		$$="bool";
+		if($1[0]=='i'){//int type
+			fprintf(file,"\tisub\n");
+		}
+		else{//float type
+			fprintf(file,"\tfcmpl\n");
+		}
+		if(!strcmp($2,"LSS"))
+			fprintf(file,"\tiflt");
+		else{				
+			char* temp = lower_substr($2,2);
+			fprintf(file,"\tif%s",temp);
+			free(temp);		
+		}
+		fprintf(file," L_cmp_%d\n\ticonst_0\n",cmp_number++);
+		fprintf(file,"\tgoto L_cmp_%d\n",cmp_number);
+
+		fprintf(file,"L_cmp_%d:\n\ticonst_1\n",cmp_number-1);
+		
+		fprintf(file,"L_cmp_%d:\n",cmp_number++);
 		printf("%s\n",$2);
+		//fprintf(file,"\t%s\n",instruction);
 	}
 	|B3{$$=$1;}
 ;
@@ -204,10 +251,15 @@ B3
 		}
 		else if(strcmp($1,$3)){
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
+			HAS_ERROR=1;
 			$$="float32";//conversion
 		}
 		$$=$1;
 		printf("%s\n",$2);
+		if(!strcmp($1,"int32"))
+			fprintf(file,"\ti%s\n",lower_str($2));
+		else
+			fprintf(file,"\tf%s\n",lower_str($2));
 	}
 	|B4{$$=$1;}
 ;
@@ -219,20 +271,32 @@ B4
 			//printf("error:%d: undefined: %s\n",yylineno,id);
 		}
 		else if(!strcmp($2,"REM")&&(!(strcmp($1,"float32"))||!(strcmp($3,"float32")))){	
+			HAS_ERROR=1;
 			printf("error:%d: invalid operation: (operator REM not defined on float32)\n",yylineno);
 		}
 		else if(strcmp($1,$3)){	
+			HAS_ERROR=1;
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 			$$="float32";//conversion
 		}
 		$$=$1;
 		printf("%s\n",$2);
+		if(!strcmp($1,"int32"))
+			fprintf(file,"\ti%s\n",lower_str($2));
+		else
+			fprintf(file,"\tf%s\n",lower_str($2));
 	}
-	|UnaryExpr{$$=find_type($1,&foo);}
+	|UnaryExpr{$$=find_type($1,&foo,&foo_b);}
 ;
 UnaryExpr 
     : PrimaryExpr{$$=$1;} 
-    | Unary_op UnaryExpr{$$=$2;printf("%s\n",$1);}
+    | Unary_op UnaryExpr{
+		$$=$2;
+		if(!strcmp($1,"NOT"))
+			fprintf(file,"\ticonst_1\n");//for xor operation
+		fprintf(file,"\t%s\n",instruction);
+		printf("%s\n",$1);
+	}
 ;
 
 LA
@@ -262,36 +326,53 @@ Mul_op
 ;
 
 Unary_op 
-    : ADD{$$="POS";}
-    | SUB{$$="NEG";}
-    | NOT{$$="NOT";}
+    : ADD{$$="POS";strcpy(instruction,"");}
+    | SUB{$$="NEG";strcpy(instruction,"ineg");}
+    | NOT{$$="NOT";strcpy(instruction,"ixor");}
 ;
 
 /*Primary expression*/
 PrimaryExpr
     : Operand{$$=$1;}
-    | IndexExpr{$$=$1;}
+    | IndexExpr{$$=$1;left_array=1;}
     | ConversionExpr{$$=$1;}
 ;
 
 Operand
     : Literal{$$=$1;}
-    | IDENT{lookup_symbol($1,tail);$$=find_type($1,&foo);var_flag=1;}
+    | IDENT{
+		int address=lookup_symbol($1,tail);
+		array_or_address=address;
+		bool is_array=0;
+		$$=find_type($1,&foo,&is_array);
+		var_flag=1;
+		if(l_value)
+			l_address=address;	
+		if($$[0]=='s'||is_array)	
+			fprintf(file,"\taload %d\n",address);
+		else if(!l_value)
+			fprintf(file,"\t%cload %d\n",$$[0],address);
+		
+	}
 	| LPAREN  Expression RPAREN{$$=$2;}
 ;
 
 Literal
-    : INT_LIT{printf("INT_LIT %d\n",$1);$$="int32";}
-    | FLOAT_LIT{printf("FLOAT_LIT %f\n",$1);$$="float32";}
-    | BOOL_LIT{printf("BOOL_LIT %d\n",$1);$$="bool";}
-    | STRING_LIT{printf("STRING_LIT %s\n",$1);$$="string";} 
-	| TRUE{printf("TRUE\n");$$="bool";}
-	| FALSE{printf("FALSE\n");$$="bool";}
+    : INT_LIT{fprintf(file,"\tldc %d\n",$1);printf("INT_LIT %d\n",$1);$$="int32";}
+    | FLOAT_LIT{fprintf(file,"\tldc %f\n",$1);printf("FLOAT_LIT %f\n",$1);$$="float32";}
+    | BOOL_LIT{fprintf(file,"\tldc %d\n",$1);printf("BOOL_LIT %d\n",$1);$$="bool";}
+    | STRING_LIT{fprintf(file,"\tldc %s\n",$1);printf("STRING_LIT %s\n",$1);$$="string";} 
+	| TRUE{fprintf(file,"\ticonst_1\n");printf("TRUE\n");$$="bool";}
+	| FALSE{fprintf(file,"\ticonst_0\n");printf("FALSE\n");$$="bool";}
 ;
 
 /*Index expression*/
 IndexExpr
-    : PrimaryExpr LBRACK Expression RBRACK{$$=$1;}//need to be checked
+    : PrimaryExpr LBRACK Expression RBRACK{
+		$$=$1;
+		if(!l_value)
+			fprintf(file,"\t%caload\n",$1[0]);
+	}//need to be checked
 ;
 
 /*Coversion (type casting)*/
@@ -311,7 +392,7 @@ Statement
 ;
 
 SimpleStmt
-    : AssignmentStmt{var_flag=0;}
+    : AssignmentStmt{var_flag=0;l_value=1;}
     | Expression
     | IncDecStmt
 ;
@@ -320,44 +401,74 @@ SimpleStmt
 DeclarationStmt 
     : VAR IDENT Type DeclarationAssign{
 		strcpy(_var,$2);
-
+		int address;
 		if($3[0]=='a'){
-			create_symbol(_var,"array",_type+1);				
+			address=create_symbol(_var,"array",_type+1);
+			fprintf(file,"\tastore %d\n\n",address);				
 		}
 		else{
+			if(!$4)
+				fprintf(file,"\tldc 0\n");
 			strcpy(_type,$3);
-			create_symbol(_var,_type,"-");				
+			address=create_symbol(_var,_type,"-");				
+			if(!strcmp($3,"string"))
+				fprintf(file,"\tastore %d\n\n",address);
+			else
+				fprintf(file,"\t%cstore %d\n\n",$3[0],address);
 		}
 	}
 ;
 
 DeclarationAssign
-    : ASSIGN Expression
-    |
-;
+    : ASSIGN Expression{$$=1;}
+    |{$$=0;}
 
 /*Assignments statements*/
 AssignmentStmt 
-    : ExpressionVar Assign_op Expression{	
+    : ExpressionVar Assign_op  Expression{	
+		left_array=0;//reset
+		l_value=1;
+		if(array_or_address==-1){
+			fprintf(file,"\t%castore\n\n",$1[0]);
+		}
+		else{
+			fprintf(file,"\t%cstore %d\n\n",$1[0],l_address);
+		}
+		array_or_address=-10;//reset 
+
 		if(!strcmp($1,"unknown")||!strcmp($1,"unknown")){
 			//printf("error:%d: undefined: %s\n",yylineno,id);
+			
 		}
 		else if(!strcmp($2,"REM_ASSIGN")&&(!strcmp($1,"float32")||!strcmp($3,"float32"))){	
+			HAS_ERROR=1;
 			printf("error:%d: invalid operation: (operator REM_ASSIGN not defined on float32)\n",yylineno);
 		}
 		else if(strcmp($1,$3)){
+			HAS_ERROR=1;
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
 		else if(left_value_error){
-
 			printf("error:%d: cannot assign to %s\n",yylineno,$1);
+			HAS_ERROR=1;
 			left_value_error=0;
 		}
 		printf("%s\n",$2);
+		
 	}
 ;
 
 ExpressionVar
+	:IndexExpr{$$=$1;}
+	|Literal{$$=$1;left_value_error=1;}
+	|IDENT{
+		bool is_array=0;
+		$$=find_type($1,&foo,&is_array);
+		int address=lookup_symbol($1,tail);
+		array_or_address=address;
+		
+	}
+	/*
 	: Expression{
 		if(!var_flag){
 			
@@ -365,15 +476,17 @@ ExpressionVar
 			var_flag=0;
 		}
 		$$=$1;
-	}
+		if(left_array)
+			array_or_address=-1;
+	}*/
 ;
 Assign_op
-    : ASSIGN {$$="ASSIGN";}
-    | ADD_ASSIGN {$$="ADD_ASSIGN";}
-    | SUB_ASSIGN {$$="SUB_ASSIGN";}
-    | MUL_ASSIGN {$$="MUL_ASSIGN";}
-    | QUO_ASSIGN {$$="QUO_ASSIGN";}
-    | REM_ASSIGN {$$="REM_ASSIGN";}
+    : ASSIGN {$$="ASSIGN";l_value=0;}
+    | ADD_ASSIGN {$$="ADD_ASSIGN";l_value=0;}
+    | SUB_ASSIGN {$$="SUB_ASSIGN";l_value=0;}
+    | MUL_ASSIGN {$$="MUL_ASSIGN";l_value=0;}
+    | QUO_ASSIGN {$$="QUO_ASSIGN";l_value=0;}
+    | REM_ASSIGN {$$="REM_ASSIGN";l_value=0;}
 ;
 
 /*IncDec statements*/
@@ -402,6 +515,7 @@ IfStmt
 Condition
     : Expression{
 		if(strcmp($1,"bool")){
+			HAS_ERROR=1;
 			printf("error:%d: non-bool (type %s) used as for condition\n",yylineno+1,$1);
 		}
 	}
@@ -432,7 +546,11 @@ PosStmt
 
 /*Print statements*/
 PrintStmt
-	: PrintType LPAREN Expression RPAREN{printf("%s %s\n",$1,$3);}
+	: PrintType LPAREN Expression RPAREN{
+		printf("%s %s\n",$1,$3);
+		fprintf(file,"\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n\tswap\n");
+		fprintf(file,"\tinvokevirtual java/io/PrintStream/println(I)V\n\n");
+	}
 ;   
 
 PrintType
@@ -463,9 +581,31 @@ stb* new_stb_node(int index,char* name, char* type,
 	node->last_child=last_child;
 	return node;
 }
-
-
-char* find_type(char* id,int* line){
+char* lower_str(char* str){
+	//printf("%d\n",strlen(str));
+	char* u_s=malloc(strlen(str)*sizeof(char));	
+	for(int i=0;i<strlen(str);++i){
+		u_s[i]=tolower(str[i]);
+	}
+	return u_s;
+}
+char* lower_substr(char* str, int  len){
+	//printf("%d\n",strlen(str));
+	if(len>strlen(str)){
+		printf("len of the substr is to small!\n");
+		return str;
+	}
+	char* u_s=malloc(len*sizeof(char));	
+	for(int i=0;i<len;++i){
+		u_s[i]=tolower(str[i]);
+	}
+	return u_s;
+}
+/*
+char* dict(const char* instruction){
+	//if(!strcmp)
+}*/
+char* find_type(char* id,int* line,bool* is_array){
 	if(!strcmp(id,"int32")||!strcmp(id,"float32")||!strcmp(id,"string")||!strcmp(id,"bool"))
 		return id;
 	stb* temp= tail;
@@ -479,6 +619,7 @@ char* find_type(char* id,int* line){
 	else{
 		char* t;
 		if(!strcmp(temp->type,"array")){
+			*is_array=1;
 			t=malloc(sizeof(*(temp->element_type)));
 			strcpy(t,temp->element_type);
 		}
@@ -500,33 +641,51 @@ int main(int argc, char *argv[])
     }
 	
 
+	file=fopen("hw3.j","w");
+	fprintf(file,".source hw3.j\n");
+	fprintf(file,".class public Main\n");
+	fprintf(file,".super java/lang/Object\n");
+	fprintf(file,".method public static main([Ljava/lang/String;)V\n");
+	fprintf(file,".limit stack 100\n");
+	fprintf(file,".limit locals 100\n");
     yylineno = 0;
     yyparse();
 	dump_symbol(tail);
 	printf("Total lines: %d\n", yylineno);
     fclose(yyin);
+	
+	if(HAS_ERROR){
+		remove("hw3.j");
+	}
+	else{	
+		fprintf(file,"	return\n");
+		fprintf(file,".end method\n");
+	}
     return 0;
 }
 
-static void create_symbol(char* id, char* type, char* etype){
+static int create_symbol(char* id, char* type, char* etype){
 
 	if(tail==NULL||tail->scope!=scope){//empty symbol table or new scope
 		stb* n=new_stb_node(0,id,type,etype,tail,NULL,NULL);
 		n->last_child=n;
 		tail=n;
 		insert_symbol(n);
+		return n->address; 
 	}
 	else{
 		int* pre_line=malloc(sizeof(int));
-		if(strcmp(find_type(id,pre_line),"unknown")){
+		if(strcmp(find_type(id,pre_line,&foo_b),"unknown")){
 			printf("error:%d: %s redeclared in this block. previous declaration at line %d\n",yylineno,id,*pre_line);
-			return;	
+			return -1;	
 		}
 		stb* n=new_stb_node(tail->last_child->index+1,id,type,etype,NULL,NULL,NULL);
 		tail->last_child->child=n;
 		tail->last_child=n;
-		insert_symbol(n);	
+		insert_symbol(n);
+		return n->address;	
 	}
+	
 }
 
 static void insert_symbol(stb* n) {
@@ -534,17 +693,17 @@ static void insert_symbol(stb* n) {
     printf("> Insert {%s} into symbol table (scope level: %d)\n", n->name, scope);
 }
 
-static void lookup_symbol(char* id, stb* n) {
+static int lookup_symbol(char* id, stb* n) {
 	while(n!=NULL){
 		if(!strcmp(id,n->name)){
 			printf("IDENT (name=%s, address=%d)\n",n->name,n->address);
-			return;
+			return n->address;
 		}
 		else
 			n=n->child;
 	}
 	printf("error:%d: undefined: %s\n",yylineno+1,id);
-	return ;
+	return -1;
 }
 
 static void dump_symbol(stb* n) {
