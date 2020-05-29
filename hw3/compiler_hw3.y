@@ -155,8 +155,6 @@ ArrayType
     :  LBRACK  Expression RBRACK Type{$$=$4;}
 ;
 /*Expressions*/
-
-
 Expression 
     : Expression LO B1{
 
@@ -575,12 +573,13 @@ Condition
 	}
 ;
 
-
+//{fprintf(file,"L%d_for_begin%d:\n",scope,for_num[scope]);}
 /*For statements*/
 ForStmt
     : FOR{fprintf(file,"L%d_for_begin%d:\n",scope,for_num[scope]);} ForCondition Block{
 	fprintf(file,"\tgoto L%d_for_begin%d\n",scope,for_num[scope]);
-	fprintf(file,"L%d_for_exit%d:\n",scope,for_num[scope]++);	
+	fprintf(file,"L%d_for_exit%d:\n",scope,for_num[scope]);
+	++for_num[scope];	
 }
 ;
 
@@ -590,7 +589,14 @@ ForCondition
 ;
 
 ForClause
-    : InitStmt SEMICOLON Condition SEMICOLON PosStmt
+    : InitStmt SEMICOLON{fprintf(file,"L%d_for_begin%d:\n",scope,++for_num[scope]);} Condition{
+		fprintf(file,"\tifeq L%d_for_exit%d\n",scope,for_num[scope]+1);
+		fprintf(file,"\tgoto L%d_for_stmt%d\n",scope,for_num[scope]);
+	}
+SEMICOLON{fprintf(file,"L%d_for_begin%d:\n",scope,++for_num[scope]);} PosStmt{
+		fprintf(file,"\tgoto L%d_for_begin%d\n",scope,for_num[scope]-1);
+		fprintf(file,"L%d_for_stmt%d:\n",scope,for_num[scope]-1);
+	}
 ;
 
 InitStmt

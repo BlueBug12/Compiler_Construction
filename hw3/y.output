@@ -136,29 +136,35 @@ Grammar
    91 ForCondition: Condition
    92             | ForClause
 
-   93 ForClause: InitStmt SEMICOLON Condition SEMICOLON PosStmt
+   93 $@5: %empty
 
-   94 InitStmt: SimpleStmt
+   94 $@6: %empty
 
-   95 PosStmt: SimpleStmt
+   95 $@7: %empty
 
-   96 PrintStmt: PrintType LPAREN Expression RPAREN
+   96 ForClause: InitStmt SEMICOLON $@5 Condition $@6 SEMICOLON $@7 PosStmt
 
-   97 PrintType: PRINT
-   98          | PRINTLN
+   97 InitStmt: SimpleStmt
+
+   98 PosStmt: SimpleStmt
+
+   99 PrintStmt: PrintType LPAREN Expression RPAREN
+
+  100 PrintType: PRINT
+  101          | PRINTLN
 
 
 Terminals, with rules where they appear
 
     $end (0) 0
     error (256)
-    LPAREN (258) 44 52 96
-    RPAREN (259) 44 52 96
+    LPAREN (258) 44 52 99
+    RPAREN (259) 44 52 99
     LBRACK (260) 10 51
     RBRACK (261) 10 51
     LBRACE (262) 82
     RBRACE (263) 82
-    SEMICOLON (264) 93
+    SEMICOLON (264) 96
     NEWLINE (265) 53 54 55 56 57 58 59
     ADD (266) 31 36
     SUB (267) 32 37
@@ -188,8 +194,8 @@ Terminals, with rules where they appear
     ELSE (291) 84 85
     FOR (292) 90
     VAR (293) 63
-    PRINT (294) 97
-    PRINTLN (295) 98
+    PRINT (294) 100
+    PRINTLN (295) 101
     IDENT <string> (296) 43 63 69
     INT <string> (297) 6
     FLOAT <string> (298) 7
@@ -222,7 +228,7 @@ Nonterminals, with rules where they appear
         on right: 5
     Expression <string> (56)
         on left: 11 12
-        on right: 10 11 44 51 52 61 64 66 88 96
+        on right: 10 11 44 51 52 61 64 66 88 99
     B1 <string> (57)
         on left: 13 14
         on right: 11 12 13
@@ -276,7 +282,7 @@ Nonterminals, with rules where they appear
         on right: 2 3
     SimpleStmt (74)
         on left: 60 61 62
-        on right: 54 94 95
+        on right: 54 97 98
     DeclarationStmt (75)
         on left: 63
         on right: 53
@@ -321,7 +327,7 @@ Nonterminals, with rules where they appear
         on right: 83 84 85
     Condition (89)
         on left: 88
-        on right: 86 91 93
+        on right: 86 91 96
     ForStmt (90)
         on left: 90
         on right: 57
@@ -332,20 +338,29 @@ Nonterminals, with rules where they appear
         on left: 91 92
         on right: 90
     ForClause (93)
-        on left: 93
-        on right: 92
-    InitStmt (94)
-        on left: 94
-        on right: 93
-    PosStmt (95)
-        on left: 95
-        on right: 93
-    PrintStmt (96)
         on left: 96
-        on right: 58
-    PrintType <string> (97)
-        on left: 97 98
+        on right: 92
+    $@5 (94)
+        on left: 93
         on right: 96
+    $@6 (95)
+        on left: 94
+        on right: 96
+    $@7 (96)
+        on left: 95
+        on right: 96
+    InitStmt (97)
+        on left: 97
+        on right: 96
+    PosStmt (98)
+        on left: 98
+        on right: 96
+    PrintStmt (99)
+        on left: 99
+        on right: 58
+    PrintType <string> (100)
+        on left: 100 101
+        on right: 99
 
 
 State 0
@@ -592,16 +607,16 @@ State 12
 
 State 13
 
-   97 PrintType: PRINT .
+  100 PrintType: PRINT .
 
-    $default  reduce using rule 97 (PrintType)
+    $default  reduce using rule 100 (PrintType)
 
 
 State 14
 
-   98 PrintType: PRINTLN .
+  101 PrintType: PRINTLN .
 
-    $default  reduce using rule 98 (PrintType)
+    $default  reduce using rule 101 (PrintType)
 
 
 State 15
@@ -1032,7 +1047,7 @@ State 52
 
 State 53
 
-   96 PrintStmt: PrintType . LPAREN Expression RPAREN
+   99 PrintStmt: PrintType . LPAREN Expression RPAREN
 
     LPAREN  shift, and go to state 103
 
@@ -1737,7 +1752,7 @@ State 102
 
 State 103
 
-   96 PrintStmt: PrintType LPAREN . Expression RPAREN
+   99 PrintStmt: PrintType LPAREN . Expression RPAREN
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -1873,9 +1888,9 @@ State 107
 
 State 108
 
-   94 InitStmt: SimpleStmt .
+   97 InitStmt: SimpleStmt .
 
-    $default  reduce using rule 94 (InitStmt)
+    $default  reduce using rule 97 (InitStmt)
 
 
 State 109
@@ -1903,7 +1918,7 @@ State 111
 
 State 112
 
-   93 ForClause: InitStmt . SEMICOLON Condition SEMICOLON PosStmt
+   96 ForClause: InitStmt . SEMICOLON $@5 Condition $@6 SEMICOLON $@7 PosStmt
 
     SEMICOLON  shift, and go to state 131
 
@@ -2054,7 +2069,7 @@ State 126
 State 127
 
    11 Expression: Expression . LO B1
-   96 PrintStmt: PrintType LPAREN Expression . RPAREN
+   99 PrintStmt: PrintType LPAREN Expression . RPAREN
 
     RPAREN  shift, and go to state 136
     LOR     shift, and go to state 67
@@ -2085,41 +2100,11 @@ State 130
 
 State 131
 
-   93 ForClause: InitStmt SEMICOLON . Condition SEMICOLON PosStmt
+   96 ForClause: InitStmt SEMICOLON . $@5 Condition $@6 SEMICOLON $@7 PosStmt
 
-    LPAREN      shift, and go to state 1
-    LBRACK      shift, and go to state 2
-    ADD         shift, and go to state 5
-    SUB         shift, and go to state 6
-    NOT         shift, and go to state 7
-    TRUE        shift, and go to state 8
-    FALSE       shift, and go to state 9
-    IDENT       shift, and go to state 54
-    INT         shift, and go to state 16
-    FLOAT       shift, and go to state 17
-    BOOL        shift, and go to state 18
-    STRING      shift, and go to state 19
-    INT_LIT     shift, and go to state 20
-    FLOAT_LIT   shift, and go to state 21
-    STRING_LIT  shift, and go to state 22
-    BOOL_LIT    shift, and go to state 23
+    $default  reduce using rule 93 ($@5)
 
-    Type            go to state 26
-    TypeName        go to state 27
-    ArrayType       go to state 28
-    Expression      go to state 60
-    B1              go to state 30
-    B2              go to state 31
-    B3              go to state 32
-    B4              go to state 33
-    UnaryExpr       go to state 34
-    Unary_op        go to state 35
-    PrimaryExpr     go to state 36
-    Operand         go to state 37
-    Literal         go to state 56
-    IndexExpr       go to state 57
-    ConversionExpr  go to state 40
-    Condition       go to state 138
+    $@5  go to state 138
 
 
 State 132
@@ -2183,9 +2168,9 @@ State 135
 
 State 136
 
-   96 PrintStmt: PrintType LPAREN Expression RPAREN .
+   99 PrintStmt: PrintType LPAREN Expression RPAREN .
 
-    $default  reduce using rule 96 (PrintStmt)
+    $default  reduce using rule 99 (PrintStmt)
 
 
 State 137
@@ -2197,9 +2182,41 @@ State 137
 
 State 138
 
-   93 ForClause: InitStmt SEMICOLON Condition . SEMICOLON PosStmt
+   96 ForClause: InitStmt SEMICOLON $@5 . Condition $@6 SEMICOLON $@7 PosStmt
 
-    SEMICOLON  shift, and go to state 140
+    LPAREN      shift, and go to state 1
+    LBRACK      shift, and go to state 2
+    ADD         shift, and go to state 5
+    SUB         shift, and go to state 6
+    NOT         shift, and go to state 7
+    TRUE        shift, and go to state 8
+    FALSE       shift, and go to state 9
+    IDENT       shift, and go to state 54
+    INT         shift, and go to state 16
+    FLOAT       shift, and go to state 17
+    BOOL        shift, and go to state 18
+    STRING      shift, and go to state 19
+    INT_LIT     shift, and go to state 20
+    FLOAT_LIT   shift, and go to state 21
+    STRING_LIT  shift, and go to state 22
+    BOOL_LIT    shift, and go to state 23
+
+    Type            go to state 26
+    TypeName        go to state 27
+    ArrayType       go to state 28
+    Expression      go to state 60
+    B1              go to state 30
+    B2              go to state 31
+    B3              go to state 32
+    B4              go to state 33
+    UnaryExpr       go to state 34
+    Unary_op        go to state 35
+    PrimaryExpr     go to state 36
+    Operand         go to state 37
+    Literal         go to state 56
+    IndexExpr       go to state 57
+    ConversionExpr  go to state 40
+    Condition       go to state 140
 
 
 State 139
@@ -2216,7 +2233,32 @@ State 139
 
 State 140
 
-   93 ForClause: InitStmt SEMICOLON Condition SEMICOLON . PosStmt
+   96 ForClause: InitStmt SEMICOLON $@5 Condition . $@6 SEMICOLON $@7 PosStmt
+
+    $default  reduce using rule 94 ($@6)
+
+    $@6  go to state 141
+
+
+State 141
+
+   96 ForClause: InitStmt SEMICOLON $@5 Condition $@6 . SEMICOLON $@7 PosStmt
+
+    SEMICOLON  shift, and go to state 142
+
+
+State 142
+
+   96 ForClause: InitStmt SEMICOLON $@5 Condition $@6 SEMICOLON . $@7 PosStmt
+
+    $default  reduce using rule 95 ($@7)
+
+    $@7  go to state 143
+
+
+State 143
+
+   96 ForClause: InitStmt SEMICOLON $@5 Condition $@6 SEMICOLON $@7 . PosStmt
 
     LPAREN      shift, and go to state 1
     LBRACK      shift, and go to state 2
@@ -2250,22 +2292,22 @@ State 140
     Literal         go to state 38
     IndexExpr       go to state 39
     ConversionExpr  go to state 40
-    SimpleStmt      go to state 141
+    SimpleStmt      go to state 144
     AssignmentStmt  go to state 44
     ExpressionVar   go to state 45
     IncDecStmt      go to state 46
-    PosStmt         go to state 142
+    PosStmt         go to state 145
 
 
-State 141
+State 144
 
-   95 PosStmt: SimpleStmt .
+   98 PosStmt: SimpleStmt .
 
-    $default  reduce using rule 95 (PosStmt)
+    $default  reduce using rule 98 (PosStmt)
 
 
-State 142
+State 145
 
-   93 ForClause: InitStmt SEMICOLON Condition SEMICOLON PosStmt .
+   96 ForClause: InitStmt SEMICOLON $@5 Condition $@6 SEMICOLON $@7 PosStmt .
 
-    $default  reduce using rule 93 (ForClause)
+    $default  reduce using rule 96 (ForClause)
