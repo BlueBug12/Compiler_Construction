@@ -16,7 +16,6 @@
     static int address=-1;
 	static int foo=0;
 	static bool foo_b=0;
-	static bool var_flag=0;
 	static bool left_value_error=0;
     typedef struct symbol_table stb;
 
@@ -57,14 +56,16 @@
 	/*Global variables*/	
 	char _type [9];
 	char _var [128];
-	char _etype [7];
 	char instruction[10];
 	bool HAS_ERROR = false;
-	bool left_array=false;
-	bool l_value=true;
-	int l_address=-1;
-	int array_or_address=-10;//-1 is array -10 is default
+	int l_address=-1;//-1 is default, represent array type
 	int cmp_number=0; 
+	//int if_number=0;
+	//int if_exit_number=0;
+	//int for_number=0;
+	int* if_num;//at most 30 nested if statement
+	int* if_exit_num;
+	int* for_num;//at most 30 nested for statement
 	FILE *file;
 %}
 
@@ -85,7 +86,7 @@
 %token LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE //parentheses
 %token SEMICOLON
 //%token COMMA
-//%token DIVTA
+//%token QUOTA
 %token NEWLINE
 
 /*Arithmetic, relational, and logical operator*/
@@ -164,9 +165,11 @@ Expression
 		}
 		else if(!strcmp($1,"float32")||!strcmp($3,"float32")){	
 			printf("error:%d: invalid operation: (operator LOR not defined on float32)\n",yylineno);
+			HAS_ERROR=1;
 		}
 		else if(!strcmp($1,"int32")||!strcmp($3,"int32")){		
 			printf("error:%d: invalid operation: (operator LOR not defined on int32)\n",yylineno);
+			HAS_ERROR=1;
 		}
 		
 		$$="bool";	
@@ -186,14 +189,17 @@ B1
 		}
 		else if(!strcmp($1,"float32")||!strcmp($3,"float32")){	
 			printf("error:%d: invalid operation: (operator LAND not defined on float32)\n",yylineno);
+			HAS_ERROR=1;
 		}
 		else if(!strcmp($1,"int32")||!strcmp($3,"int32")){		
 			printf("error:%d: invalid operation: (operator LAND not defined on int32)\n",yylineno);
+			HAS_ERROR=1;
 		}
 		
 		
 		else if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
+			HAS_ERROR=1;
 		}
 		$$="bool";
 		printf("%s\n",$2);
@@ -211,6 +217,7 @@ B2
 		}
 		else if(strcmp($1,$3)){	
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
+			HAS_ERROR=1;
 		}
 		$$="bool";
 		if($1[0]=='i'){//int type
@@ -220,18 +227,18 @@ B2
 			fprintf(file,"\tfcmpl\n");
 		}
 		if(!strcmp($2,"LSS"))
-			fprintf(file,"\tiflt");
+			fprintf(file,"\tiflt ");
 		else{				
 			char* temp = lower_substr($2,2);
-			fprintf(file,"\tif%s",temp);
+			fprintf(file,"\tif%s ",temp);
 			free(temp);		
 		}
-		fprintf(file," L_cmp_%d\n\ticonst_0\n",cmp_number++);
-		fprintf(file,"\tgoto L_cmp_%d\n",cmp_number);
+		fprintf(file,"L%d_cmp_%d\n\ticonst_0\n",scope,cmp_number++);
+		fprintf(file,"\tgoto L%d_cmp_%d\n",scope,cmp_number);
 
-		fprintf(file,"L_cmp_%d:\n\ticonst_1\n",cmp_number-1);
+		fprintf(file,"L%d_cmp_%d:\n\ticonst_1\n",scope,cmp_number-1);
 		
-		fprintf(file,"L_cmp_%d:\n",cmp_number++);
+		fprintf(file,"L%d_cmp_%d:\n",scope,cmp_number++);
 		printf("%s\n",$2);
 		//fprintf(file,"\t%s\n",instruction);
 	}
@@ -245,6 +252,7 @@ B3
 		}
 		else if(strcmp($1,$3)){
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
+			HAS_ERROR=1;
 			$$="float32";//conversion
 		}
 		$$=$1;
@@ -264,9 +272,11 @@ B4
 			//printf("error:%d: undefined: %s\n",yylineno,id);
 		}
 		else if(!strcmp($2,"REM")&&(!(strcmp($1,"float32"))||!(strcmp($3,"float32")))){	
+			HAS_ERROR=1;
 			printf("error:%d: invalid operation: (operator REM not defined on float32)\n",yylineno);
 		}
 		else if(strcmp($1,$3)){	
+			HAS_ERROR=1;
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 			$$="float32";//conversion
 		}
@@ -325,7 +335,7 @@ Unary_op
 /*Primary expression*/
 PrimaryExpr
     : Operand{$$=$1;}
-    | IndexExpr{$$=$1;left_array=1;}
+    | IndexExpr{$$=$1;fprintf(file,"\t%caload\n",$1[0]);}
     | ConversionExpr{$$=$1;}
 ;
 
@@ -333,15 +343,11 @@ Operand
     : Literal{$$=$1;}
     | IDENT{
 		int address=lookup_symbol($1,tail);
-		array_or_address=address;
 		bool is_array=0;
 		$$=find_type($1,&foo,&is_array);
-		var_flag=1;
-		if(l_value)
-			l_address=address;	
 		if($$[0]=='s'||is_array)	
 			fprintf(file,"\taload %d\n",address);
-		else if(!l_value)
+		else
 			fprintf(file,"\t%cload %d\n",$$[0],address);
 		
 	}
@@ -349,10 +355,10 @@ Operand
 ;
 
 Literal
-    : INT_LIT{fprintf(file,"\tldc %d\n",$1);printf("INT_LIT\n");$$="int32";}
-    | FLOAT_LIT{fprintf(file,"\tldc %f\n",$1);printf("FLOAT_LIT\n");$$="float32";}
-    | BOOL_LIT{fprintf(file,"\tldc %d\n",$1);printf("BOOL_LIT\n");$$="bool";}
-    | STRING_LIT{fprintf(file,"\tldc %s\n",$1);printf("STRING_LIT\n");$$="string";} 
+    : INT_LIT{fprintf(file,"\tldc %d\n",$1);printf("INT_LIT %d\n",$1);$$="int32";}
+    | FLOAT_LIT{fprintf(file,"\tldc %f\n",$1);printf("FLOAT_LIT %f\n",$1);$$="float32";}
+    | BOOL_LIT{fprintf(file,"\tldc %d\n",$1);printf("BOOL_LIT %d\n",$1);$$="bool";}
+    | STRING_LIT{fprintf(file,"\tldc \"%s\"\n",$1);printf("STRING_LIT %s\n",$1);$$="string";} 
 	| TRUE{fprintf(file,"\ticonst_1\n");printf("TRUE\n");$$="bool";}
 	| FALSE{fprintf(file,"\ticonst_0\n");printf("FALSE\n");$$="bool";}
 ;
@@ -361,14 +367,29 @@ Literal
 IndexExpr
     : PrimaryExpr LBRACK Expression RBRACK{
 		$$=$1;
-		if(!l_value)
-			fprintf(file,"\t%caload\n",$1[0]);
 	}//need to be checked
 ;
 
 /*Coversion (type casting)*/
 ConversionExpr
-     : Type LPAREN Expression RPAREN{$$=$1;printf("%c to %c\n",toupper($3[0]),toupper($1[0]));}
+     : Type LPAREN Expression RPAREN{
+		$$=$1;
+		if(!strcmp($1,$3)){
+			printf("error:%d: covert the same type",yylineno);
+			HAS_ERROR=1;
+		}
+		else if(!strcmp($1,"float32")&&!strcmp($3,"int32")){
+			fprintf(file,"\ti2f\n");
+		}
+		else if(!strcmp($1,"int32")&&!strcmp($3,"float32")){
+			fprintf(file,"\tf2i\n");
+		}
+		else{
+			printf("error:%d: cannot convert type %s to type %s",yylineno,$3,$1);
+			HAS_ERROR=1;
+		}
+		printf("%c to %c\n",toupper($3[0]),toupper($1[0]));
+	}
 ;
 
 /*Statements*/
@@ -383,7 +404,7 @@ Statement
 ;
 
 SimpleStmt
-    : AssignmentStmt{var_flag=0;l_value=1;}
+    : AssignmentStmt
     | Expression
     | IncDecStmt
 ;
@@ -395,7 +416,7 @@ DeclarationStmt
 		int address;
 		if($3[0]=='a'){
 			address=create_symbol(_var,"array",_type+1);
-			fprintf(file,"\tastore %d\n\n",address);				
+			fprintf(file,"\tastore %d\n",address);				
 		}
 		else{
 			if(!$4)
@@ -403,9 +424,9 @@ DeclarationStmt
 			strcpy(_type,$3);
 			address=create_symbol(_var,_type,"-");				
 			if(!strcmp($3,"string"))
-				fprintf(file,"\tastore %d\n\n",address);
+				fprintf(file,"\tastore %d\n",address);
 			else
-				fprintf(file,"\t%cstore %d\n\n",$3[0],address);
+				fprintf(file,"\t%cstore %d\n",$3[0],address);
 		}
 	}
 ;
@@ -417,64 +438,76 @@ DeclarationAssign
 /*Assignments statements*/
 AssignmentStmt 
     : ExpressionVar Assign_op  Expression{	
-		left_array=0;//reset
-		l_value=1;
-		if(array_or_address==-1){
-			fprintf(file,"\t%castore\n\n",$1[0]);
+		if(l_address==-1){
+			fprintf(file,"\t%castore\n",$1[0]);
 		}
 		else{
-			fprintf(file,"\t%cstore %d\n\n",$1[0],l_address);
+			fprintf(file,"\t%cstore %d\n",$1[0],l_address);
+			l_address=-1;//reset to default	
 		}
-		array_or_address=-10;//reset 
 
 		if(!strcmp($1,"unknown")||!strcmp($1,"unknown")){
 			//printf("error:%d: undefined: %s\n",yylineno,id);
 		}
 		else if(!strcmp($2,"REM_ASSIGN")&&(!strcmp($1,"float32")||!strcmp($3,"float32"))){	
+			HAS_ERROR=1;
 			printf("error:%d: invalid operation: (operator REM_ASSIGN not defined on float32)\n",yylineno);
 		}
 		else if(strcmp($1,$3)){
+			HAS_ERROR=1;
 			printf("error:%d: invalid operation: %s (mismatched types %s and %s)\n",yylineno,$2,$1,$3);
 		}
 		else if(left_value_error){
-
 			printf("error:%d: cannot assign to %s\n",yylineno,$1);
+			HAS_ERROR=1;
 			left_value_error=0;
 		}
 		printf("%s\n",$2);
-		
 	}
 ;
 
 ExpressionVar
-	: Expression{
-		if(!var_flag){
-			
-			left_value_error=1;
-			var_flag=0;
-		}
-		$$=$1;
-		if(left_array)
-			array_or_address=-1;
+	:IndexExpr{$$=$1;}
+	|Literal{$$=$1;left_value_error=1;}
+	|IDENT{
+		bool is_array=0;
+		$$=find_type($1,&foo,&is_array);
+		int address=lookup_symbol($1,tail);
+		l_address=address;	
 	}
 ;
+
 Assign_op
-    : ASSIGN {$$="ASSIGN";l_value=0;}
-    | ADD_ASSIGN {$$="ADD_ASSIGN";l_value=0;}
-    | SUB_ASSIGN {$$="SUB_ASSIGN";l_value=0;}
-    | MUL_ASSIGN {$$="MUL_ASSIGN";l_value=0;}
-    | DIV_ASSIGN {$$="DIV_ASSIGN";l_value=0;}
-    | REM_ASSIGN {$$="REM_ASSIGN";l_value=0;}
+    : ASSIGN {$$="ASSIGN";}
+    | ADD_ASSIGN {$$="ADD_ASSIGN";}
+    | SUB_ASSIGN {$$="SUB_ASSIGN";}
+    | MUL_ASSIGN {$$="MUL_ASSIGN";}
+    | DIV_ASSIGN {$$="DIV_ASSIGN";}
+    | REM_ASSIGN {$$="REM_ASSIGN";}
 ;
 
 /*IncDec statements*/
 IncDecStmt
-    : Expression IncDec
+    : ExpressionVar{
+	if($1[0]=='s'||l_address==-1)	
+		fprintf(file,"\taload %d\n",l_address);
+	else
+		fprintf(file,"\t%cload %d\n",$1[0],l_address);
+	fprintf(file,"\tldc 1\n");
+	} IncDec{	
+		if(l_address==-1){
+			fprintf(file,"\t%castore\n",$1[0]);
+		}
+		else{
+			fprintf(file,"\t%cstore %d\n",$1[0],l_address);
+			l_address=-1;//reset to default	
+		}
+	}
 ;
 
 IncDec
-    : INC{printf("INC\n");}
-    | DEC{printf("DEC\n");}
+    : INC{printf("INC\n");fprintf(file,"\tiadd\n");}
+    | DEC{printf("DEC\n");fprintf(file,"\tisub\n");}
 ;
 
 /*Block*/
@@ -485,14 +518,27 @@ Block
 
 /*If statements* {stack(&stack_top,"#");}*/
 IfStmt
-    : IF Condition Block
-	| IF Condition Block ELSE IfStmt
-	| IF Condition Block ELSE Block
+	:IfBlock{fprintf(file,"\nL%d_if_exit_%d:\n",scope,if_exit_num[scope]++);}
+	| IfBlock ELSE IfStmt
+	| IfBlock ELSE Block{
+		fprintf(file,"\nL%d_if_exit_%d:\n",scope,if_exit_num[scope]++);
+	}
 ;
 
+IfCondition
+	:IF Condition{
+		fprintf(file,"\tifeq L%d_if_%d\n",scope,if_num[scope]);//if false, jump
+	}
+
+IfBlock
+    : IfCondition Block{	
+		fprintf(file,"\tgoto L%d_if_exit_%d\n",scope,if_exit_num[scope]);//after if block
+		fprintf(file,"\nL%d_if_%d:\n",scope,if_num[scope]++);		
+	}
 Condition
     : Expression{
 		if(strcmp($1,"bool")){
+			HAS_ERROR=1;
 			printf("error:%d: non-bool (type %s) used as for condition\n",yylineno+1,$1);
 		}
 	}
@@ -501,11 +547,14 @@ Condition
 
 /*For statements*/
 ForStmt
-    : FOR ForCondition Block
+    : FOR{fprintf(file,"L%d_for_begin%d:\n",scope,for_num[scope]);} ForCondition Block{
+	fprintf(file,"\tgoto L%d_for_begin%d\n",scope,for_num[scope]);
+	fprintf(file,"L%d_for_exiti%d:\n",scope,for_num[scope]++);	
+}
 ;
 
 ForCondition
-    : Condition
+    : Condition{fprintf(file,"\tifeq L%d_for_exit%d\n",scope,for_num[scope]);}
     | ForClause
 ;
 
@@ -523,7 +572,22 @@ PosStmt
 
 /*Print statements*/
 PrintStmt
-	: PrintType LPAREN Expression RPAREN{printf("%s %s\n",$1,$3);}
+	: PrintType LPAREN Expression RPAREN{
+		if(!strcmp($3,"bool")){
+			fprintf(file,"\tifne L%d_cmp_:%d\n",scope,cmp_number++);
+			fprintf(file,"\tldc \"false\"\n\tgoto L%d_cmp_%d\n",scope,cmp_number);
+			fprintf(file,"L%d_cmp_%d:\n\tldc \"true\"\n",scope,cmp_number-1);
+			fprintf(file,"L%d_cmp_%d:\n",scope,cmp_number++);
+			
+		}
+		printf("%s %s\n",$1,$3);
+		fprintf(file,"\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n\tswap\n");
+		if(!strcmp($1,"PRINTLN"))
+			fprintf(file,"\tinvokevirtual java/io/PrintStream/println(I)V\n\n");
+		else
+			fprintf(file,"\tinvokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n\n");
+			
+	}
 ;   
 
 PrintType
@@ -612,8 +676,14 @@ int main(int argc, char *argv[])
     } else {
         yyin = stdin;
     }
-	
-
+	if_num = malloc(30*sizeof(int));
+	if_exit_num = malloc(30*sizeof(int));
+	for_num = malloc(30*sizeof(int));
+	for(int i=0;i<30;++i){
+		if_num[i]=0;
+		if_exit_num[i]=0;
+		for_num[i]=0;
+	}
 	file=fopen("hw3.j","w");
 	fprintf(file,".source hw3.j\n");
 	fprintf(file,".class public Main\n");
@@ -634,6 +704,9 @@ int main(int argc, char *argv[])
 		fprintf(file,"	return\n");
 		fprintf(file,".end method\n");
 	}
+	free(if_num);
+	free(if_exit_num);
+	free(for_num);
     return 0;
 }
 
