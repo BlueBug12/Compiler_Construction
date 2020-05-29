@@ -580,7 +580,7 @@ Condition
 ForStmt
     : FOR{fprintf(file,"L%d_for_begin%d:\n",scope,for_num[scope]);} ForCondition Block{
 	fprintf(file,"\tgoto L%d_for_begin%d\n",scope,for_num[scope]);
-	fprintf(file,"L%d_for_exiti%d:\n",scope,for_num[scope]++);	
+	fprintf(file,"L%d_for_exit%d:\n",scope,for_num[scope]++);	
 }
 ;
 

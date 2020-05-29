@@ -2302,7 +2302,7 @@ yyreduce:
 #line 581 "compiler_hw3.y"
                                                                                       {
 	fprintf(file,"\tgoto L%d_for_begin%d\n",scope,for_num[scope]);
-	fprintf(file,"L%d_for_exiti%d:\n",scope,for_num[scope]++);	
+	fprintf(file,"L%d_for_exit%d:\n",scope,for_num[scope]++);	
 }
 #line 2308 "y.tab.c"
     break;
