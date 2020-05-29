@@ -680,10 +680,10 @@ static const yytype_int16 yyrline[] =
      316,   317,   321,   322,   326,   327,   328,   332,   333,   334,
      339,   340,   341,   345,   346,   358,   362,   363,   364,   365,
      366,   367,   372,   379,   401,   402,   403,   404,   405,   406,
-     407,   411,   412,   413,   418,   447,   448,   452,   482,   483,
-     484,   492,   493,   494,   495,   496,   497,   502,   502,   524,
-     525,   530,   530,   530,   536,   537,   538,   544,   549,   554,
-     565,   565,   572,   573,   577,   581,   585,   590,   614,   615
+     407,   411,   412,   413,   418,   447,   448,   452,   498,   499,
+     500,   508,   509,   510,   511,   512,   513,   518,   518,   540,
+     541,   546,   546,   546,   552,   553,   554,   560,   565,   570,
+     581,   581,   588,   589,   593,   597,   601,   606,   630,   631
 };
 #endif
 
@@ -2057,7 +2057,7 @@ yyreduce:
 				else if((yyvsp[-1].string)[0]=='f')
 					fprintf(file,"\tldc 0.0\n");
 				else//string
-					fprintf(file,"\t\"\"\n");
+					fprintf(file,"\tldc \"\"\n");
 			}
 			strcpy(_type,(yyvsp[-1].string));
 			address=create_symbol(_var,_type,"-");				
@@ -2087,10 +2087,26 @@ yyreduce:
   case 67:
 #line 452 "compiler_hw3.y"
                                          {	
+		if(strlen((yyvsp[-1].string))==10){//except ASSIGN
+			if((yyvsp[-2].string)[0]=='s'||l_array)	
+				fprintf(file,"\taload %d\n",l_address);
+			else if((yyvsp[-2].string)[0]=='i'||(yyvsp[-2].string)[0]=='b')
+				fprintf(file,"\tiload %d\n",l_address);
+			else if((yyvsp[-2].string)[0]=='f')
+				fprintf(file,"\tfload %d\n",l_address);
+			fprintf(file,"\tswap\n");
+			char* temp_op = lower_substr((yyvsp[-1].string),3);
+			fprintf(file,"\t%c%s\n",(yyvsp[-2].string)[0],temp_op);
+			free(temp_op);
+		}
 		if(l_array){
 			fprintf(file,"\t%castore\n",(yyvsp[-2].string)[0]);
 			l_array=0;//reset to default	
 		}
+		else if((yyvsp[-2].string)[0]=='s')
+			fprintf(file,"\tastore %d\n",l_address);
+		else if((yyvsp[-2].string)[0]=='b')
+			fprintf(file,"\tistore %d\n",l_address);
 		else{
 			fprintf(file,"\t%cstore %d\n",(yyvsp[-2].string)[0],l_address);
 		}
@@ -2113,69 +2129,69 @@ yyreduce:
 		}
 		printf("%s\n",(yyvsp[-1].string));
 	}
-#line 2117 "y.tab.c"
+#line 2133 "y.tab.c"
     break;
 
   case 68:
-#line 482 "compiler_hw3.y"
+#line 498 "compiler_hw3.y"
                   {(yyval.string)=(yyvsp[0].string);l_array=1;}
-#line 2123 "y.tab.c"
+#line 2139 "y.tab.c"
     break;
 
   case 69:
-#line 483 "compiler_hw3.y"
+#line 499 "compiler_hw3.y"
                 {(yyval.string)=(yyvsp[0].string);left_value_error=1;}
-#line 2129 "y.tab.c"
+#line 2145 "y.tab.c"
     break;
 
   case 70:
-#line 484 "compiler_hw3.y"
+#line 500 "compiler_hw3.y"
               {
 		bool is_array=0;
 		(yyval.string)=find_type((yyvsp[0].string),&foo,&is_array);
 		l_address=lookup_symbol((yyvsp[0].string),tail);
 	}
-#line 2139 "y.tab.c"
+#line 2155 "y.tab.c"
     break;
 
   case 71:
-#line 492 "compiler_hw3.y"
+#line 508 "compiler_hw3.y"
              {(yyval.string)="ASSIGN";}
-#line 2145 "y.tab.c"
+#line 2161 "y.tab.c"
     break;
 
   case 72:
-#line 493 "compiler_hw3.y"
+#line 509 "compiler_hw3.y"
                  {(yyval.string)="ADD_ASSIGN";}
-#line 2151 "y.tab.c"
+#line 2167 "y.tab.c"
     break;
 
   case 73:
-#line 494 "compiler_hw3.y"
+#line 510 "compiler_hw3.y"
                  {(yyval.string)="SUB_ASSIGN";}
-#line 2157 "y.tab.c"
+#line 2173 "y.tab.c"
     break;
 
   case 74:
-#line 495 "compiler_hw3.y"
+#line 511 "compiler_hw3.y"
                  {(yyval.string)="MUL_ASSIGN";}
-#line 2163 "y.tab.c"
+#line 2179 "y.tab.c"
     break;
 
   case 75:
-#line 496 "compiler_hw3.y"
+#line 512 "compiler_hw3.y"
                  {(yyval.string)="DIV_ASSIGN";}
-#line 2169 "y.tab.c"
+#line 2185 "y.tab.c"
     break;
 
   case 76:
-#line 497 "compiler_hw3.y"
+#line 513 "compiler_hw3.y"
                  {(yyval.string)="REM_ASSIGN";}
-#line 2175 "y.tab.c"
+#line 2191 "y.tab.c"
     break;
 
   case 77:
-#line 502 "compiler_hw3.y"
+#line 518 "compiler_hw3.y"
                    {
 	if((yyvsp[0].string)[0]=='s'||l_array)	
 		fprintf(file,"\taload %d\n",l_address);
@@ -2186,11 +2202,11 @@ yyreduce:
 	else
 		fprintf(file,"\terror for IncDec\n");
 	}
-#line 2190 "y.tab.c"
+#line 2206 "y.tab.c"
     break;
 
   case 78:
-#line 511 "compiler_hw3.y"
+#line 527 "compiler_hw3.y"
                 {
 		fprintf(file,"\t%c%s\n",(yyvsp[-2].string)[0],(yyvsp[0].string));
 		if(l_array){
@@ -2201,104 +2217,104 @@ yyreduce:
 			fprintf(file,"\t%cstore %d\n",(yyvsp[-2].string)[0],l_address);
 		}
 	}
-#line 2205 "y.tab.c"
+#line 2221 "y.tab.c"
     break;
 
   case 79:
-#line 524 "compiler_hw3.y"
+#line 540 "compiler_hw3.y"
          {printf("INC\n");(yyval.string)="add";}
-#line 2211 "y.tab.c"
+#line 2227 "y.tab.c"
     break;
 
   case 80:
-#line 525 "compiler_hw3.y"
+#line 541 "compiler_hw3.y"
          {printf("DEC\n");(yyval.string)="sub";}
-#line 2217 "y.tab.c"
+#line 2233 "y.tab.c"
     break;
 
   case 81:
-#line 530 "compiler_hw3.y"
+#line 546 "compiler_hw3.y"
             {++scope;}
-#line 2223 "y.tab.c"
+#line 2239 "y.tab.c"
     break;
 
   case 82:
-#line 530 "compiler_hw3.y"
+#line 546 "compiler_hw3.y"
                                     {dump_symbol(tail);}
-#line 2229 "y.tab.c"
+#line 2245 "y.tab.c"
     break;
 
   case 83:
-#line 530 "compiler_hw3.y"
+#line 546 "compiler_hw3.y"
                                                                {--scope;}
-#line 2235 "y.tab.c"
+#line 2251 "y.tab.c"
     break;
 
   case 84:
-#line 536 "compiler_hw3.y"
+#line 552 "compiler_hw3.y"
                 {fprintf(file,"\nL%d_if_exit_%d:\n",scope,if_exit_num[scope]++);}
-#line 2241 "y.tab.c"
-    break;
-
-  case 86:
-#line 538 "compiler_hw3.y"
-                            {
-		fprintf(file,"\nL%d_if_exit_%d:\n",scope,if_exit_num[scope]++);
-	}
-#line 2249 "y.tab.c"
-    break;
-
-  case 87:
-#line 544 "compiler_hw3.y"
-                     {
-		fprintf(file,"\tifeq L%d_if_%d\n",scope,if_num[scope]);//if false, jump
-	}
 #line 2257 "y.tab.c"
     break;
 
+  case 86:
+#line 554 "compiler_hw3.y"
+                            {
+		fprintf(file,"\nL%d_if_exit_%d:\n",scope,if_exit_num[scope]++);
+	}
+#line 2265 "y.tab.c"
+    break;
+
+  case 87:
+#line 560 "compiler_hw3.y"
+                     {
+		fprintf(file,"\tifeq L%d_if_%d\n",scope,if_num[scope]);//if false, jump
+	}
+#line 2273 "y.tab.c"
+    break;
+
   case 88:
-#line 549 "compiler_hw3.y"
+#line 565 "compiler_hw3.y"
                        {	
 		fprintf(file,"\tgoto L%d_if_exit_%d\n",scope,if_exit_num[scope]);//after if block
 		fprintf(file,"\nL%d_if_%d:\n",scope,if_num[scope]++);		
 	}
-#line 2266 "y.tab.c"
+#line 2282 "y.tab.c"
     break;
 
   case 89:
-#line 554 "compiler_hw3.y"
+#line 570 "compiler_hw3.y"
                 {
 		if(strcmp((yyvsp[0].string),"bool")){
 			HAS_ERROR=1;
 			printf("error:%d: non-bool (type %s) used as for condition\n",yylineno+1,(yyvsp[0].string));
 		}
 	}
-#line 2277 "y.tab.c"
+#line 2293 "y.tab.c"
     break;
 
   case 90:
-#line 565 "compiler_hw3.y"
+#line 581 "compiler_hw3.y"
          {fprintf(file,"L%d_for_begin%d:\n",scope,for_num[scope]);}
-#line 2283 "y.tab.c"
+#line 2299 "y.tab.c"
     break;
 
   case 91:
-#line 565 "compiler_hw3.y"
+#line 581 "compiler_hw3.y"
                                                                                       {
 	fprintf(file,"\tgoto L%d_for_begin%d\n",scope,for_num[scope]);
 	fprintf(file,"L%d_for_exiti%d:\n",scope,for_num[scope]++);	
 }
-#line 2292 "y.tab.c"
+#line 2308 "y.tab.c"
     break;
 
   case 92:
-#line 572 "compiler_hw3.y"
+#line 588 "compiler_hw3.y"
                {fprintf(file,"\tifeq L%d_for_exit%d\n",scope,for_num[scope]);}
-#line 2298 "y.tab.c"
+#line 2314 "y.tab.c"
     break;
 
   case 97:
-#line 590 "compiler_hw3.y"
+#line 606 "compiler_hw3.y"
                                             {
 		char print_type;
 		if(!strcmp((yyvsp[-1].string),"bool")){
@@ -2320,23 +2336,23 @@ yyreduce:
 			fprintf(file,"\tinvokevirtual java/io/PrintStream/%s(%c)V\n\n",temp_type,print_type);
 		free(temp_type);
 	}
-#line 2324 "y.tab.c"
+#line 2340 "y.tab.c"
     break;
 
   case 98:
-#line 614 "compiler_hw3.y"
+#line 630 "compiler_hw3.y"
            {(yyval.string)="PRINT";}
-#line 2330 "y.tab.c"
+#line 2346 "y.tab.c"
     break;
 
   case 99:
-#line 615 "compiler_hw3.y"
+#line 631 "compiler_hw3.y"
              {(yyval.string)="PRINTLN";}
-#line 2336 "y.tab.c"
+#line 2352 "y.tab.c"
     break;
 
 
-#line 2340 "y.tab.c"
+#line 2356 "y.tab.c"
 
       default: break;
     }
@@ -2568,7 +2584,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 617 "compiler_hw3.y"
+#line 633 "compiler_hw3.y"
 
 /* C code section */
 

@@ -429,7 +429,7 @@ DeclarationStmt
 				else if($3[0]=='f')
 					fprintf(file,"\tldc 0.0\n");
 				else//string
-					fprintf(file,"\t\"\"\n");
+					fprintf(file,"\tldc \"\"\n");
 			}
 			strcpy(_type,$3);
 			address=create_symbol(_var,_type,"-");				
@@ -450,10 +450,26 @@ DeclarationAssign
 /*Assignments statements*/
 AssignmentStmt 
     : ExpressionVar Assign_op  Expression{	
+		if(strlen($2)==10){//except ASSIGN
+			if($1[0]=='s'||l_array)	
+				fprintf(file,"\taload %d\n",l_address);
+			else if($1[0]=='i'||$1[0]=='b')
+				fprintf(file,"\tiload %d\n",l_address);
+			else if($1[0]=='f')
+				fprintf(file,"\tfload %d\n",l_address);
+			fprintf(file,"\tswap\n");
+			char* temp_op = lower_substr($2,3);
+			fprintf(file,"\t%c%s\n",$1[0],temp_op);
+			free(temp_op);
+		}
 		if(l_array){
 			fprintf(file,"\t%castore\n",$1[0]);
 			l_array=0;//reset to default	
 		}
+		else if($1[0]=='s')
+			fprintf(file,"\tastore %d\n",l_address);
+		else if($1[0]=='b')
+			fprintf(file,"\tistore %d\n",l_address);
 		else{
 			fprintf(file,"\t%cstore %d\n",$1[0],l_address);
 		}
