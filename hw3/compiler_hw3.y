@@ -58,7 +58,8 @@
 	char _var [128];
 	char instruction[10];
 	bool HAS_ERROR = false;
-	int l_address=-1;//-1 is default, represent array type
+	bool l_array=0;
+	int l_address=-1;
 	int cmp_number=0; 
 	//int if_number=0;
 	//int if_exit_number=0;
@@ -294,8 +295,9 @@ UnaryExpr
     | Unary_op UnaryExpr{
 		$$=$2;
 		if(!strcmp($1,"NOT"))
-			fprintf(file,"\ticonst_1\n");//for xor operation
-		fprintf(file,"\t%s\n",instruction);
+			fprintf(file,"\ticonst_1\n\tixor\n");//for xor operation
+		else if(!strcmp($1,"NEG"))
+			fprintf(file,"\t%cneg\n",$2[0]);
 		printf("%s\n",$1);
 	}
 ;
@@ -327,9 +329,9 @@ Mul_op
 ;
 
 Unary_op 
-    : ADD{$$="POS";strcpy(instruction,"");}
-    | SUB{$$="NEG";strcpy(instruction,"ineg");}
-    | NOT{$$="NOT";strcpy(instruction,"ixor");}
+    : ADD{$$="POS";}
+    | SUB{$$="NEG";}
+    | NOT{$$="NOT";}
 ;
 
 /*Primary expression*/
@@ -347,6 +349,8 @@ Operand
 		$$=find_type($1,&foo,&is_array);
 		if($$[0]=='s'||is_array)	
 			fprintf(file,"\taload %d\n",address);
+		else if($$[0]=='b')
+			fprintf(file,"\tiload %d\n",address);
 		else
 			fprintf(file,"\t%cload %d\n",$$[0],address);
 		
@@ -419,12 +423,20 @@ DeclarationStmt
 			fprintf(file,"\tastore %d\n",address);				
 		}
 		else{
-			if(!$4)
-				fprintf(file,"\tldc 0\n");
+			if(!$4){
+				if($3[0]=='i'||$3[0]=='b')
+					fprintf(file,"\tldc 0\n");
+				else if($3[0]=='f')
+					fprintf(file,"\tldc 0.0\n");
+				else//string
+					fprintf(file,"\t\"\"\n");
+			}
 			strcpy(_type,$3);
 			address=create_symbol(_var,_type,"-");				
-			if(!strcmp($3,"string"))
+			if($3[0]=='s')
 				fprintf(file,"\tastore %d\n",address);
+			else if($3[0]=='b')
+				fprintf(file,"\tistore %d\n",address);
 			else
 				fprintf(file,"\t%cstore %d\n",$3[0],address);
 		}
@@ -438,12 +450,12 @@ DeclarationAssign
 /*Assignments statements*/
 AssignmentStmt 
     : ExpressionVar Assign_op  Expression{	
-		if(l_address==-1){
+		if(l_array){
 			fprintf(file,"\t%castore\n",$1[0]);
+			l_array=0;//reset to default	
 		}
 		else{
 			fprintf(file,"\t%cstore %d\n",$1[0],l_address);
-			l_address=-1;//reset to default	
 		}
 
 		if(!strcmp($1,"unknown")||!strcmp($1,"unknown")){
@@ -472,8 +484,7 @@ ExpressionVar
 	|IDENT{
 		bool is_array=0;
 		$$=find_type($1,&foo,&is_array);
-		int address=lookup_symbol($1,tail);
-		l_address=address;	
+		l_address=lookup_symbol($1,tail);
 	}
 ;
 
@@ -489,7 +500,7 @@ Assign_op
 /*IncDec statements*/
 IncDecStmt
     : ExpressionVar{
-	if($1[0]=='s'||l_address==-1)	
+	if($1[0]=='s'||l_array)	
 		fprintf(file,"\taload %d\n",l_address);
 	else if($1[0]=='i')
 		fprintf(file,"\tiload %d\n\tldc 1\n",l_address);
@@ -499,12 +510,12 @@ IncDecStmt
 		fprintf(file,"\terror for IncDec\n");
 	} IncDec{
 		fprintf(file,"\t%c%s\n",$1[0],$3);
-		if(l_address==-1){
+		if(l_array){
 			fprintf(file,"\t%castore\n",$1[0]);
+			l_array=0;//reset to default	
 		}
 		else{
 			fprintf(file,"\t%cstore %d\n",$1[0],l_address);
-			l_address=-1;//reset to default	
 		}
 	}
 ;
@@ -580,7 +591,7 @@ PrintStmt
 		char print_type;
 		if(!strcmp($3,"bool")){
 			print_type='Z';
-			fprintf(file,"\tifne L%d_cmp_:%d\n",scope,cmp_number++);
+			fprintf(file,"\tifne L%d_cmp_%d\n",scope,cmp_number++);
 			fprintf(file,"\tldc \"false\"\n\tgoto L%d_cmp_%d\n",scope,cmp_number);
 			fprintf(file,"L%d_cmp_%d:\n\tldc \"true\"\n",scope,cmp_number-1);
 			fprintf(file,"L%d_cmp_%d:\n",scope,cmp_number++);
@@ -590,11 +601,12 @@ PrintStmt
 			print_type=toupper($3[0]);
 		printf("%s %s\n",$1,$3);
 		fprintf(file,"\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n\tswap\n");
-		if(!strcmp($1,"PRINTLN"))
-			fprintf(file,"\tinvokevirtual java/io/PrintStream/println(%c)V\n\n",print_type);
-		else
-			fprintf(file,"\tinvokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n\n");
-			
+		char* temp_type=lower_str($1);
+		if(print_type=='Z'||print_type=='S')
+			fprintf(file,"\tinvokevirtual java/io/PrintStream/%s(Ljava/lang/String;)V\n\n",temp_type);
+		else 
+			fprintf(file,"\tinvokevirtual java/io/PrintStream/%s(%c)V\n\n",temp_type,print_type);
+		free(temp_type);
 	}
 ;   
 
@@ -646,16 +658,24 @@ char* lower_substr(char* str, int  len){
 	}
 	return u_s;
 }
-/*
-char* dict(const char* instruction){
-	//if(!strcmp)
-}*/
+
 char* find_type(char* id,int* line,bool* is_array){
 	if(!strcmp(id,"int32")||!strcmp(id,"float32")||!strcmp(id,"string")||!strcmp(id,"bool"))
 		return id;
 	stb* temp= tail;
+	bool found=0;
 	while(temp!=NULL&&strcmp(temp->name,id)){
-		temp=temp->child;
+		while(temp->child!=NULL){
+			temp=temp->child;
+			if(!strcmp(temp->name,id)){
+				found=1;
+				break;
+			}
+		}
+		if(found)
+			break;
+		else
+			temp=temp->prev;//jump to outer block
 	}
 	if(temp==NULL){
 		//printf("Error: find ID in empty stack!\n");
@@ -749,15 +769,20 @@ static void insert_symbol(stb* n) {
 
 static int lookup_symbol(char* id, stb* n) {
 	while(n!=NULL){
-		if(!strcmp(id,n->name)){
-			printf("IDENT (name=%s, address=%d)\n",n->name,n->address);
+		if(!strcmp(n->name,id))
 			return n->address;
-		}
-		else
+		while(n->child!=NULL){
 			n=n->child;
+			if(!strcmp(n->name,id)){
+				printf("IDENT (name=%s, address=%d)\n",n->name,n->address);
+				return n->address;
+			}
+		}
+		n=n->prev;//jump to outer block
 	}
+	
 	printf("error:%d: undefined: %s\n",yylineno+1,id);
-	return -1;
+	return -100;
 }
 
 static void dump_symbol(stb* n) {
