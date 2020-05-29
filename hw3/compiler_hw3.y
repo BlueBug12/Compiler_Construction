@@ -111,7 +111,7 @@
 /* Nonterminal with return, which need to sepcify type */
 %type <string> Type TypeName ArrayType PrintType Operand /*Binary_op*/
 %type <string> ConversionExpr PrimaryExpr UnaryExpr Literal IndexExpr Expression
-%type <string> B1 B2 B3 B4 Add_op Mul_op Cmp_op Unary_op Assign_op LA LO ExpressionVar
+%type <string> B1 B2 B3 B4 Add_op Mul_op Cmp_op Unary_op Assign_op LA LO ExpressionVar IncDec
 %type <b_val> DeclarationAssign 
 //%left ADD SUB
 //%left MUL DIV
@@ -491,10 +491,14 @@ IncDecStmt
     : ExpressionVar{
 	if($1[0]=='s'||l_address==-1)	
 		fprintf(file,"\taload %d\n",l_address);
+	else if($1[0]=='i')
+		fprintf(file,"\tiload %d\n\tldc 1\n",l_address);
+	else if($1[0]=='f')
+		fprintf(file,"\tfload %d\n\tldc 1.0\n",l_address);
 	else
-		fprintf(file,"\t%cload %d\n",$1[0],l_address);
-	fprintf(file,"\tldc 1\n");
-	} IncDec{	
+		fprintf(file,"\terror for IncDec\n");
+	} IncDec{
+		fprintf(file,"\t%c%s\n",$1[0],$3);
 		if(l_address==-1){
 			fprintf(file,"\t%castore\n",$1[0]);
 		}
@@ -506,8 +510,8 @@ IncDecStmt
 ;
 
 IncDec
-    : INC{printf("INC\n");fprintf(file,"\tiadd\n");}
-    | DEC{printf("DEC\n");fprintf(file,"\tisub\n");}
+    : INC{printf("INC\n");$$="add";}
+    | DEC{printf("DEC\n");$$="sub";}
 ;
 
 /*Block*/
@@ -573,17 +577,21 @@ PosStmt
 /*Print statements*/
 PrintStmt
 	: PrintType LPAREN Expression RPAREN{
+		char print_type;
 		if(!strcmp($3,"bool")){
+			print_type='Z';
 			fprintf(file,"\tifne L%d_cmp_:%d\n",scope,cmp_number++);
 			fprintf(file,"\tldc \"false\"\n\tgoto L%d_cmp_%d\n",scope,cmp_number);
 			fprintf(file,"L%d_cmp_%d:\n\tldc \"true\"\n",scope,cmp_number-1);
 			fprintf(file,"L%d_cmp_%d:\n",scope,cmp_number++);
 			
 		}
+		else
+			print_type=toupper($3[0]);
 		printf("%s %s\n",$1,$3);
 		fprintf(file,"\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n\tswap\n");
 		if(!strcmp($1,"PRINTLN"))
-			fprintf(file,"\tinvokevirtual java/io/PrintStream/println(I)V\n\n");
+			fprintf(file,"\tinvokevirtual java/io/PrintStream/println(%c)V\n\n",print_type);
 		else
 			fprintf(file,"\tinvokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n\n");
 			
