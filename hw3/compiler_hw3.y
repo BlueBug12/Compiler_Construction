@@ -344,15 +344,15 @@ PrimaryExpr
 Operand
     : Literal{$$=$1;}
     | IDENT{
-		l_address=lookup_symbol($1,tail);
+		int address=lookup_symbol($1,tail);
 		bool is_array=0;
 		$$=find_type($1,&foo,&is_array);
 		if($$[0]=='s'||is_array)	
-			fprintf(file,"\taload %d\n",l_address);
+			fprintf(file,"\taload %d\n",address);
 		else if($$[0]=='b')
-			fprintf(file,"\tiload %d\n",l_address);
+			fprintf(file,"\tiload %d\n",address);
 		else
-			fprintf(file,"\t%cload %d\n",$$[0],l_address);
+			fprintf(file,"\t%cload %d\n",$$[0],address);
 		
 	}
 	| LPAREN  Expression RPAREN{$$=$2;}

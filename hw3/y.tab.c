@@ -1954,15 +1954,15 @@ yyreduce:
   case 44:
 #line 346 "compiler_hw3.y"
            {
-		l_address=lookup_symbol((yyvsp[0].string),tail);
+		int address=lookup_symbol((yyvsp[0].string),tail);
 		bool is_array=0;
 		(yyval.string)=find_type((yyvsp[0].string),&foo,&is_array);
 		if((yyval.string)[0]=='s'||is_array)	
-			fprintf(file,"\taload %d\n",l_address);
+			fprintf(file,"\taload %d\n",address);
 		else if((yyval.string)[0]=='b')
-			fprintf(file,"\tiload %d\n",l_address);
+			fprintf(file,"\tiload %d\n",address);
 		else
-			fprintf(file,"\t%cload %d\n",(yyval.string)[0],l_address);
+			fprintf(file,"\t%cload %d\n",(yyval.string)[0],address);
 		
 	}
 #line 1969 "y.tab.c"
