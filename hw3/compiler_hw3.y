@@ -344,15 +344,15 @@ PrimaryExpr
 Operand
     : Literal{$$=$1;}
     | IDENT{
-		int address=lookup_symbol($1,tail);
+		l_address=lookup_symbol($1,tail);
 		bool is_array=0;
 		$$=find_type($1,&foo,&is_array);
 		if($$[0]=='s'||is_array)	
-			fprintf(file,"\taload %d\n",address);
+			fprintf(file,"\taload %d\n",l_address);
 		else if($$[0]=='b')
-			fprintf(file,"\tiload %d\n",address);
+			fprintf(file,"\tiload %d\n",l_address);
 		else
-			fprintf(file,"\t%cload %d\n",$$[0],address);
+			fprintf(file,"\t%cload %d\n",$$[0],l_address);
 		
 	}
 	| LPAREN  Expression RPAREN{$$=$2;}
@@ -479,7 +479,7 @@ AssignmentStmt
 ;
 
 ExpressionVar
-	:IndexExpr{$$=$1;}
+	:IndexExpr{$$=$1;l_array=1;}
 	|Literal{$$=$1;left_value_error=1;}
 	|IDENT{
 		bool is_array=0;
