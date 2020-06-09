@@ -52,7 +52,6 @@
 	char* lower_substr(char* str, int len);
 	/*initialize the head of symbol table*/
 	stb* tail = NULL;
-	//char* dict(const char* instruction);
 	/*Global variables*/	
 	char _type [9];
 	char _var [128];
@@ -61,9 +60,6 @@
 	bool l_array=0;
 	int l_address=-1;
 	int cmp_number=0; 
-	//int if_number=0;
-	//int if_exit_number=0;
-	//int for_number=0;
 	int* if_num;//at most 30 nested if statement
 	int* if_exit_num;
 	int* for_num;//at most 30 nested for statement
@@ -86,8 +82,6 @@
 /*Delimiters*/
 %token LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE //parentheses
 %token SEMICOLON
-//%token COMMA
-//%token QUOTA
 %token NEWLINE
 
 /*Arithmetic, relational, and logical operator*/
@@ -114,8 +108,6 @@
 %type <string> ConversionExpr PrimaryExpr UnaryExpr Literal IndexExpr Expression
 %type <string> B1 B2 B3 B4 Add_op Mul_op Cmp_op Unary_op Assign_op LA LO ExpressionVar IncDec
 %type <b_val> DeclarationAssign 
-//%left ADD SUB
-//%left MUL DIV
 /* Yacc will start at this nonterminal */
 %start Program
 
@@ -160,6 +152,7 @@ Expression
 
 
 		if(!strcmp($1,"unknown")||!strcmp($1,"unknown")){
+			HAS_ERROR=1;
 			//printf("error:%d: undefined: %s\n",yylineno,id);
 		}
 		else if(!strcmp($1,"float32")||!strcmp($3,"float32")){	
@@ -184,6 +177,7 @@ B1
 
 
 		if(!strcmp($1,"unknown")||!strcmp($3,"unknown")){
+			HAS_ERROR=1;
 			//printf("error:%d: undefined: %s\n",yylineno,id);
 		}
 		else if(!strcmp($1,"float32")||!strcmp($3,"float32")){	
@@ -212,6 +206,7 @@ B2
 	:B2 Cmp_op B3{
 
 		if(!strcmp($1,"unknown")||!strcmp($3,"unknown")){
+			HAS_ERROR=1;
 			//printf("error:%d: undefined: %s\n",yylineno,id);
 		}
 		else if(strcmp($1,$3)){	
@@ -247,6 +242,7 @@ B3
 	:B3 Add_op B4{
 
 		if(!strcmp($1,"unknown")||!strcmp($3,"unknown")){
+			HAS_ERROR=1;
 			//printf("error:%d: undefined: %s\n",yylineno,id);
 		}
 		else if(strcmp($1,$3)){
@@ -268,6 +264,7 @@ B4
 
 
 		if(!strcmp($1,"unknown")||!strcmp($3,"unknown")){
+			HAS_ERROR=1;
 			//printf("error:%d: undefined: %s\n",yylineno,id);
 		}
 		else if(!strcmp($2,"REM")&&(!(strcmp($1,"float32"))||!(strcmp($3,"float32")))){	
@@ -545,7 +542,7 @@ Block
 ;
 
 
-/*If statements* {stack(&stack_top,"#");}*/
+
 IfStmt
 	:IfBlock{fprintf(file,"\nL%d_if_exit_%d:\n",scope,if_exit_num[scope]++);}
 	| IfBlock ELSE IfStmt
@@ -661,7 +658,7 @@ stb* new_stb_node(int index,char* name, char* type,
 	return node;
 }
 char* lower_str(char* str){
-	//printf("%d\n",strlen(str));
+
 	char* u_s=malloc(strlen(str)*sizeof(char));	
 	for(int i=0;i<strlen(str);++i){
 		u_s[i]=tolower(str[i]);
@@ -669,7 +666,7 @@ char* lower_str(char* str){
 	return u_s;
 }
 char* lower_substr(char* str, int  len){
-	//printf("%d\n",strlen(str));
+
 	if(len>strlen(str)){
 		printf("len of the substr is to small!\n");
 		return str;
